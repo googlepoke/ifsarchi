@@ -279,6 +279,57 @@ strong,b{font-weight:600}
 ::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-thumb{background:var(--s3);border-radius:5px}
 ::-webkit-scrollbar-track{background:transparent}
+/* ---------- hidden-slides picker ---------- */
+#hpicker{
+  position:fixed;inset:0;z-index:80;background:rgba(7,7,7,.92);
+  display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);
+}
+#hpicker.on{display:flex}
+#hpicker .hc{
+  background:var(--s1);border:1px solid var(--line-2);border-radius:14px;
+  padding:30px 36px;min-width:380px;max-width:540px;max-height:70vh;overflow-y:auto;
+}
+#hpicker h3{font-size:18px;font-weight:600;margin-bottom:16px}
+#hpicker #hlist{list-style:none;padding:0;margin:0}
+#hpicker #hlist li{
+  display:flex;align-items:center;gap:14px;padding:10px 0;
+  border-bottom:1px solid var(--line);font-size:13px;
+}
+#hpicker #hlist li:last-child{border-bottom:0}
+#hpicker #hlist li.empty{color:var(--tx-faint);font-style:italic;justify-content:center;padding:18px 0}
+#hpicker #hlist .hl-id{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.6px;
+  color:var(--v3);min-width:34px;
+}
+#hpicker #hlist .hl-lab{flex:1;color:var(--tx-dim);font-weight:300}
+#hpicker #hlist button{
+  font-family:var(--mono);font-size:10px;letter-spacing:.8px;text-transform:uppercase;
+  padding:6px 13px;border-radius:7px;border:1px solid var(--line-2);background:var(--s2);
+  color:var(--tx-dim);cursor:pointer;transition:all .16s ease;
+}
+#hpicker #hlist button:hover{
+  background:linear-gradient(120deg,var(--v1),var(--v2));
+  border-color:transparent;color:#fff;
+}
+#hpicker .hint{
+  font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  color:var(--tx-faint);margin-top:16px;text-align:center;
+}
+#hpicker .hint kbd{
+  background:var(--s3);border:1px solid var(--line-2);border-radius:5px;
+  padding:3px 8px;color:var(--tx);font-family:var(--mono);font-size:11px;
+}
+/* ---------- toast ---------- */
+#toast{
+  position:fixed;left:50%;bottom:60px;transform:translateX(-50%);
+  background:var(--s2);border:1px solid var(--line-2);border-radius:8px;
+  padding:10px 16px;color:var(--tx);font-size:12.5px;
+  font-family:var(--mono);letter-spacing:.6px;
+  z-index:90;opacity:0;transition:opacity .25s ease;pointer-events:none;
+  box-shadow:0 12px 32px rgba(0,0,0,.5);max-width:80vw;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+}
+#toast.on{opacity:1}
 </style>
 </head>
 <body>
@@ -1736,10 +1787,23 @@ strong,b{font-weight:600}
     <div class="hr"><span>Jump to first / last</span><span><kbd>Home</kbd> <kbd>End</kbd></span></div>
     <div class="hr"><span>Toggle speaker notes</span><span><kbd>N</kbd></span></div>
     <div class="hr"><span>Overview grid</span><span><kbd>O</kbd></span></div>
+    <div class="hr"><span>Hide current slide</span><span><kbd>H</kbd></span></div>
+    <div class="hr"><span>Open hidden-slides picker</span><span><kbd>Shift</kbd> + <kbd>H</kbd></span></div>
+    <div class="hr"><span>Restore all hidden slides</span><span><kbd>U</kbd></span></div>
     <div class="hr"><span>Fullscreen</span><span><kbd>F</kbd></span></div>
     <div class="hr"><span>Close this panel</span><span><kbd>Esc</kbd></span></div>
   </div>
 </div>
+
+<div id="hpicker">
+  <div class="hc">
+    <h3>Hidden slides</h3>
+    <ul id="hlist"></ul>
+    <p class="hint"><kbd>U</kbd> restore all &nbsp;·&nbsp; <kbd>Esc</kbd> close</p>
+  </div>
+</div>
+
+<div id="toast"></div>
 
 <script>
 /* ============================================================
@@ -1751,6 +1815,22 @@ let cur=0;
 const stage=document.getElementById('stage');
 const initOnce={};
 
+/* ---------- hide/un-hide state (persisted in localStorage) ---------- */
+let hidden=new Set();
+try{hidden=new Set(JSON.parse(localStorage.getItem('ifs-deck-hidden')||'[]'));}catch(_){}
+function saveHidden(){try{localStorage.setItem('ifs-deck-hidden',JSON.stringify([...hidden]));}catch(_){}}
+function visList(){return slides.filter(s=>!hidden.has(s.id));}
+function renumberFooters(){
+  const v=visList(),t=String(v.length).padStart(2,'0');
+  slides.forEach(s=>{
+    const pg=s.querySelector('.foot .pg');if(!pg)return;
+    const i=v.indexOf(s);if(i<0)return;
+    pg.innerHTML='<b>'+String(i+1).padStart(2,'0')+'</b> / '+t;
+  });
+}
+function firstVisible(){let i=0;while(i<TOTAL&&hidden.has(slides[i].id))i++;return i<TOTAL?i:cur;}
+function lastVisible(){let i=TOTAL-1;while(i>=0&&hidden.has(slides[i].id))i--;return i>=0?i:cur;}
+
 function fit(){
   const s=Math.min(window.innerWidth/1280,window.innerHeight/720);
   stage.style.transform=`translate(-50%,-50%) scale(${s})`;
@@ -1758,19 +1838,26 @@ function fit(){
 window.addEventListener('resize',fit);fit();
 
 function setCnt(){
-  const p=String(cur+1).padStart(2,'0');
-  document.getElementById('cnt').innerHTML='<b>'+p+'</b> / '+String(TOTAL).padStart(2,'0');
-  document.getElementById('progress').style.width=((cur+1)/TOTAL*100)+'%';
+  const v=visList(),vt=v.length,vp=v.indexOf(slides[cur])+1;
+  document.getElementById('cnt').innerHTML='<b>'+String(vp).padStart(2,'0')+'</b> / '+String(vt).padStart(2,'0');
+  document.getElementById('progress').style.width=(vp/vt*100)+'%';
 }
 function renderNotes(){
   const sl=slides[cur];
   const nd=sl.querySelector('.notes-data');
   const kick=sl.getAttribute('data-label')||('Slide '+(cur+1));
-  document.getElementById('nxLabel').textContent=kick+'  ·  '+String(cur+1).padStart(2,'0')+'/'+TOTAL;
+  const v=visList(),vt=v.length,vp=v.indexOf(sl)+1;
+  document.getElementById('nxLabel').textContent=kick+'  ·  '+String(vp).padStart(2,'0')+'/'+String(vt).padStart(2,'0');
   document.getElementById('nBody').innerHTML=nd?nd.innerHTML:'<p>—</p>';
 }
 function show(i){
   i=Math.max(0,Math.min(TOTAL-1,i));
+  // if target is hidden, fall forward to nearest visible, then backward as a fallback
+  if(hidden.has(slides[i].id)){
+    let f=i;while(f<TOTAL&&hidden.has(slides[f].id))f++;
+    if(f>=TOTAL){let b=i;while(b>=0&&hidden.has(slides[b].id))b--;if(b<0)return;f=b;}
+    i=f;
+  }
   slides[cur].classList.remove('active');
   cur=i;
   slides[cur].classList.add('active');
@@ -1778,8 +1865,71 @@ function show(i){
   const id=slides[cur].id;
   if(initOnce[id]&&!initOnce[id].done){initOnce[id].done=true;try{initOnce[id].fn();}catch(e){console.error(e);}}
 }
-function next(){show(cur+1);}
-function prev(){show(cur-1);}
+function next(){
+  let i=cur+1;while(i<TOTAL&&hidden.has(slides[i].id))i++;
+  if(i<TOTAL)show(i);
+}
+function prev(){
+  let i=cur-1;while(i>=0&&hidden.has(slides[i].id))i--;
+  if(i>=0)show(i);
+}
+
+/* ---------- toast feedback ---------- */
+let toastT;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('on');
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>t.classList.remove('on'),1800);
+}
+
+/* ---------- hide / un-hide actions ---------- */
+function hideCurrent(){
+  if(visList().length<=1){toast('Cannot hide last visible slide');return;}
+  const hSlide=slides[cur];
+  const id=hSlide.id,label=hSlide.getAttribute('data-label')||id;
+  hidden.add(id);saveHidden();
+  renumberFooters();
+  const target=cur+1<TOTAL?cur+1:cur-1;
+  show(target);
+  toast('Hidden — '+label);
+}
+function unhideAll(){
+  if(hidden.size===0){toast('No hidden slides');return;}
+  hidden.clear();saveHidden();
+  renumberFooters();setCnt();renderNotes();
+  if(document.getElementById('hpicker').classList.contains('on'))renderPicker();
+  toast('All slides restored');
+}
+function unhideOne(id){
+  hidden.delete(id);saveHidden();
+  renumberFooters();setCnt();renderNotes();
+  renderPicker();
+}
+function renderPicker(){
+  const list=document.getElementById('hlist');
+  list.innerHTML='';
+  if(hidden.size===0){
+    const li=document.createElement('li');li.className='empty';
+    li.textContent='No slides hidden.';
+    list.appendChild(li);return;
+  }
+  slides.filter(s=>hidden.has(s.id)).forEach(s=>{
+    const li=document.createElement('li');
+    const lab=s.getAttribute('data-label')||s.id;
+    const idSpan=document.createElement('span');idSpan.className='hl-id';idSpan.textContent=s.id;
+    const labSpan=document.createElement('span');labSpan.className='hl-lab';labSpan.textContent=lab;
+    const btn=document.createElement('button');btn.textContent='Restore';
+    btn.onclick=()=>unhideOne(s.id);
+    li.appendChild(idSpan);li.appendChild(labSpan);li.appendChild(btn);
+    list.appendChild(li);
+  });
+}
+function togglePicker(){
+  const el=document.getElementById('hpicker');
+  el.classList.toggle('on');
+  if(el.classList.contains('on'))renderPicker();
+}
 
 document.getElementById('bNext').onclick=next;
 document.getElementById('bPrev').onclick=prev;
@@ -1789,17 +1939,23 @@ document.addEventListener('keydown',e=>{
   if(e.key==='ArrowRight'||e.key==='PageDown'){next();}
   else if(e.key==='ArrowLeft'||e.key==='PageUp'){prev();}
   else if(e.key===' '){e.preventDefault();next();}
-  else if(e.key==='Home'){show(0);}
-  else if(e.key==='End'){show(TOTAL-1);}
+  else if(e.key==='Home'){show(firstVisible());}
+  else if(e.key==='End'){show(lastVisible());}
   else if(e.key==='n'||e.key==='N'){document.getElementById('notes').classList.toggle('on');}
   else if(e.key==='?'){document.getElementById('help').classList.toggle('on');}
   else if(e.key==='o'||e.key==='O'){toggleOverview();}
   else if(e.key==='f'||e.key==='F'){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}
-  else if(e.key==='Escape'){document.getElementById('help').classList.remove('on');document.getElementById('notes').classList.remove('on');}
+  else if(e.key==='h'||e.key==='H'){if(e.shiftKey){togglePicker();}else{hideCurrent();}}
+  else if(e.key==='u'||e.key==='U'){unhideAll();}
+  else if(e.key==='Escape'){
+    document.getElementById('help').classList.remove('on');
+    document.getElementById('notes').classList.remove('on');
+    document.getElementById('hpicker').classList.remove('on');
+  }
 });
 /* click zones for navigation */
 document.getElementById('viewport').addEventListener('click',e=>{
-  if(e.target.closest('.n-node,.tg,button,a,.no-nav,#notes,#help'))return;
+  if(e.target.closest('.n-node,.tg,button,a,.no-nav,#notes,#help,#hpicker'))return;
   const x=e.clientX/window.innerWidth;
   if(x>0.62)next();else if(x<0.20)prev();
 });
@@ -1809,9 +1965,10 @@ function toggleOverview(){
   overviewOn=!overviewOn;
   if(overviewOn){
     stage.style.transition='transform .3s ease';
-    const cols=8,rows=Math.ceil(TOTAL/cols);
+    const cols=8,rows=Math.ceil(TOTAL/cols);  // TODO: use visList().length when implementing
   }
 }
+
 /* tooltip helper shared by diagrams */
 function mkTip(container){
   const t=document.createElement('div');t.className='dg-tip';container.appendChild(t);
@@ -2443,50 +2600,62 @@ dgReg('s32','dg-map',1140,468,function(svg,tip,px){
   const mg=svg.append('g').attr('transform','translate(70,58)');
   // soft glow backdrop
   R(svg,40,30,680,408,{r:18,fill:'rgba(59,130,246,.03)',stroke:C.line});
-  const ausPath='M40,95 L95,40 L175,70 L210,35 L255,78 L300,30 L340,90 L400,150 '
-    +'L470,235 L505,285 L475,320 L390,320 L300,295 L210,320 L120,305 L55,235 L35,160 Z';
+  // Australia mainland — clockwise from Cape York tip; recognisable silhouette with Carpentaria indent, Kimberley/NT bulge, NW Cape jut, SW corner, Wilsons Promontory and east-coast Sydney bulge
+  const ausPath='M412,27 L425,55 L450,90 L465,115 L495,140 L515,165 L540,185 L547,210 '
+    +'L547,240 L535,260 L524,273 L510,300 L495,318 L462,328 L442,314 L420,323 '
+    +'L395,318 L365,310 L330,312 L290,313 L240,313 L180,310 L130,305 L96,290 '
+    +'L65,278 L72,250 L55,215 L42,180 L48,148 L65,143 L110,128 L150,108 L180,82 '
+    +'L225,76 L245,68 L265,46 L285,34 L335,42 L345,72 L370,98 L398,82 L405,48 Z';
   mg.append('path').attr('d',ausPath)
-    .attr('fill','rgba(132,39,226,.07)').attr('stroke',C.line2).attr('stroke-width',1.6)
+    .attr('fill','rgba(132,39,226,.08)').attr('stroke',C.line2).attr('stroke-width',1.8)
     .attr('stroke-linejoin','round');
-  // faint context dots
-  [[60,210],[330,70],[250,300]].forEach(p=>{
-    mg.append('circle').attr('cx',p[0]).attr('cy',p[1]).attr('r',2.4).attr('fill',C.faint);
-  });
+  // Tasmania
+  const tasPath='M445,348 L478,345 L487,358 L480,375 L455,372 L442,360 Z';
+  mg.append('path').attr('d',tasPath)
+    .attr('fill','rgba(132,39,226,.08)').attr('stroke',C.line2).attr('stroke-width',1.5)
+    .attr('stroke-linejoin','round');
+  // region label
+  T(mg,10,14,'AUSTRALIA — DATA RESIDENT ONSHORE',{fs:11,mono:1,fill:C.faint,ls:1.8});
   // sites
-  const SYD={x:500,y:268,name:'Sydney',region:'Australia East',role:'PRIMARY',col:C.v2,glow:C.v3,
+  const SYD={x:524,y:273,name:'Sydney',region:'Australia East',role:'PRIMARY',col:C.v2,glow:C.v3,
     d:'Production and day-to-day non-production environments. Australia East supports Availability Zones — the High Availability add-on operates here.'};
-  const MEL={x:452,y:312,name:'Melbourne',region:'Australia Southeast',role:'DISASTER RECOVERY',col:C.teal,glow:C.teal,
+  const MEL={x:442,y:308,name:'Melbourne',region:'Australia Southeast',role:'DISASTER RECOVERY',col:C.teal,glow:C.teal,
     d:'The geographically separated secondary region — holds geo-redundant backup and recovery storage. Protects against a region-level event.'};
-  // replication arc
+  // replication arc — curves inland between the two coastal cities
   const arc=mg.append('path')
-    .attr('d','M'+SYD.x+','+SYD.y+' Q'+(SYD.x+62)+','+((SYD.y+MEL.y)/2+18)+' '+MEL.x+','+MEL.y)
-    .attr('fill','none').attr('stroke',C.teal).attr('stroke-width',2)
-    .attr('stroke-dasharray','6,7').attr('opacity',.85);
+    .attr('d','M'+SYD.x+','+SYD.y+' Q478,238 '+MEL.x+','+MEL.y)
+    .attr('fill','none').attr('stroke',C.teal).attr('stroke-width',2.2)
+    .attr('stroke-dasharray','6,7').attr('opacity',.9);
   (function flow(){arc.attr('stroke-dashoffset',0).transition().duration(1400).ease(d3.easeLinear)
     .attr('stroke-dashoffset',-26).on('end',flow);})();
-  T(mg,(SYD.x+MEL.x)/2+58,(SYD.y+MEL.y)/2+8,'geo-redundant',{fs:8.5,mono:1,fill:C.teal});
-  T(mg,(SYD.x+MEL.x)/2+58,(SYD.y+MEL.y)/2+20,'replication',{fs:8.5,mono:1,fill:C.teal});
-  // markers
+  T(mg,498,255,'geo-redundant',{fs:9.5,mono:1,fill:C.teal});
+  T(mg,498,267,'replication',{fs:9.5,mono:1,fill:C.teal});
+  // markers — larger and predominantly labelled
   let selSite='overview';
+  const labelPos={Sydney:{x:336,y:194},Melbourne:{x:470,y:284}};
   [SYD,MEL].forEach(S=>{
     const g=mg.append('g').attr('class','n-node');
-    const pulse=g.append('circle').attr('cx',S.x).attr('cy',S.y).attr('r',9).attr('fill','none')
-      .attr('stroke',S.glow).attr('stroke-width',1.5);
-    (function rep(){pulse.attr('r',9).attr('opacity',.7)
-      .transition().duration(2000).ease(d3.easeCubicOut).attr('r',26).attr('opacity',0)
+    const pulse=g.append('circle').attr('cx',S.x).attr('cy',S.y).attr('r',11).attr('fill','none')
+      .attr('stroke',S.glow).attr('stroke-width',1.8);
+    (function rep(){pulse.attr('r',11).attr('opacity',.75)
+      .transition().duration(2000).ease(d3.easeCubicOut).attr('r',32).attr('opacity',0)
       .on('end',rep);})();
-    S._core=g.append('circle').attr('cx',S.x).attr('cy',S.y).attr('r',9)
-      .attr('fill',S.col).attr('stroke','#fff').attr('stroke-width',1.5);
-    R(g,S.x+16,S.y-22,150,44,{r:8,fill:C.s1,stroke:C.line});
-    T(g,S.x+28,S.y-6,S.name,{fs:13,fw:600});
-    T(g,S.x+28,S.y+9,S.role,{fs:7.5,mono:1,fill:S.glow,ls:1.2});
-    T(g,S.x+28,S.y+20,S.region,{fs:7.5,mono:1,fill:C.faint});
+    S._core=g.append('circle').attr('cx',S.x).attr('cy',S.y).attr('r',11)
+      .attr('fill',S.col).attr('stroke','#fff').attr('stroke-width',1.8);
+    const lp=labelPos[S.name];
+    const cx=lp.x<S.x?lp.x+182:lp.x;
+    g.append('line').attr('x1',S.x).attr('y1',S.y).attr('x2',cx).attr('y2',lp.y+26)
+      .attr('stroke',S.glow).attr('stroke-width',1).attr('opacity',.45)
+      .attr('stroke-dasharray','3,3');
+    R(g,lp.x,lp.y,182,52,{r:9,fill:C.s1,stroke:C.line});
+    T(g,lp.x+14,lp.y+22,S.name,{fs:17,fw:600});
+    T(g,lp.x+14,lp.y+37,S.role,{fs:8,mono:1,fill:S.glow,ls:1.3});
+    T(g,lp.x+14,lp.y+48,S.region,{fs:8,mono:1,fill:C.faint});
     g.on('click',()=>{selSite=S.name;render();})
      .on('mousemove',e=>{const m=px(e);
        tip.show('<div class="tk">'+S.role+'</div><div class="tt">'+S.name+' · '+S.region+'</div><div class="td">'+S.d+'</div>',m[0],m[1]);})
      .on('mouseleave',()=>tip.hide());
   });
-  T(mg,40,360,'AUSTRALIA — DATA RESIDENT ONSHORE',{fs:9,mono:1,fill:C.faint,ls:1.6});
   // panel
   const PX=760,PY=40,PW=348,PH=388;
   R(svg,PX,PY,PW,PH,{r:14,fill:C.s1,stroke:C.line});
@@ -2645,7 +2814,16 @@ dgReg('s33','dg-syd',1140,468,function(svg,tip,px){
 
 /* ---- DIAGRAMS_INSERT ---- */
 
-show(0);setCnt();renderNotes();
+/* ---------- boot: pick initial slide, honour persisted-hidden state ---------- */
+(function bootHidden(){
+  if(visList().length===0){hidden.clear();saveHidden();}  // safety: never wedge
+  let target=slides.findIndex(s=>s.classList.contains('active'));
+  if(target<0)target=0;
+  // clear any source-level active classes so show()'s targeted activation is clean
+  slides.forEach(s=>s.classList.remove('active'));
+  renumberFooters();
+  show(target);  // handles fall-forward-if-hidden, setCnt, renderNotes, lazy diagram init
+})();
 </script>
 
 
