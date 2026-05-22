@@ -2600,57 +2600,41 @@ dgReg('s32','dg-map',1140,468,function(svg,tip,px){
   const mg=svg.append('g').attr('transform','translate(70,58)');
   // soft glow backdrop
   R(svg,40,30,680,408,{r:18,fill:'rgba(59,130,246,.03)',stroke:C.line});
-  // Australia mainland — clockwise from Cape York tip; recognisable silhouette with Carpentaria indent, Kimberley/NT bulge, NW Cape jut, SW corner, Wilsons Promontory and east-coast Sydney bulge
-  const ausPath='M412,27 L425,55 L450,90 L465,115 L495,140 L515,165 L540,185 L547,210 '
-    +'L547,240 L535,260 L524,273 L510,300 L495,318 L462,328 L442,314 L420,323 '
-    +'L395,318 L365,310 L330,312 L290,313 L240,313 L180,310 L130,305 L96,290 '
-    +'L65,278 L72,250 L55,215 L42,180 L48,148 L65,143 L110,128 L150,108 L180,82 '
-    +'L225,76 L245,68 L265,46 L285,34 L335,42 L345,72 L370,98 L398,82 L405,48 Z';
-  mg.append('path').attr('d',ausPath)
-    .attr('fill','rgba(132,39,226,.08)').attr('stroke',C.line2).attr('stroke-width',1.8)
-    .attr('stroke-linejoin','round');
-  // Tasmania
-  const tasPath='M445,348 L478,345 L487,358 L480,375 L455,372 L442,360 Z';
-  mg.append('path').attr('d',tasPath)
-    .attr('fill','rgba(132,39,226,.08)').attr('stroke',C.line2).attr('stroke-width',1.5)
-    .attr('stroke-linejoin','round');
-  // region label
-  T(mg,10,14,'AUSTRALIA — DATA RESIDENT ONSHORE',{fs:11,mono:1,fill:C.faint,ls:1.8});
-  // sites
-  const SYD={x:524,y:273,name:'Sydney',region:'Australia East',role:'PRIMARY',col:C.v2,glow:C.v3,
+  // sites — Sydney upper-right, Melbourne lower-left, centred in the frame
+  const SYD={x:460,y:175,name:'Sydney',region:'Australia East',role:'PRIMARY',col:C.v2,glow:C.v3,
     d:'Production and day-to-day non-production environments. Australia East supports Availability Zones — the High Availability add-on operates here.'};
-  const MEL={x:442,y:308,name:'Melbourne',region:'Australia Southeast',role:'DISASTER RECOVERY',col:C.teal,glow:C.teal,
+  const MEL={x:240,y:250,name:'Melbourne',region:'Australia Southeast',role:'DISASTER RECOVERY',col:C.teal,glow:C.teal,
     d:'The geographically separated secondary region — holds geo-redundant backup and recovery storage. Protects against a region-level event.'};
-  // replication arc — curves inland between the two coastal cities
+  // replication arc — gentle downward bow between the two cities
   const arc=mg.append('path')
-    .attr('d','M'+SYD.x+','+SYD.y+' Q478,238 '+MEL.x+','+MEL.y)
-    .attr('fill','none').attr('stroke',C.teal).attr('stroke-width',2.2)
-    .attr('stroke-dasharray','6,7').attr('opacity',.9);
+    .attr('d','M'+SYD.x+','+SYD.y+' Q350,305 '+MEL.x+','+MEL.y)
+    .attr('fill','none').attr('stroke',C.teal).attr('stroke-width',2.4)
+    .attr('stroke-dasharray','6,7').attr('opacity',.95);
   (function flow(){arc.attr('stroke-dashoffset',0).transition().duration(1400).ease(d3.easeLinear)
     .attr('stroke-dashoffset',-26).on('end',flow);})();
-  T(mg,498,255,'geo-redundant',{fs:9.5,mono:1,fill:C.teal});
-  T(mg,498,267,'replication',{fs:9.5,mono:1,fill:C.teal});
-  // markers — larger and predominantly labelled
+  T(mg,350,200,'geo-redundant',{fs:11,mono:1,fill:C.teal,anchor:'middle',ls:1.2});
+  T(mg,350,214,'replication',{fs:11,mono:1,fill:C.teal,anchor:'middle',ls:1.2});
+  // markers — large and predominantly labelled
   let selSite='overview';
-  const labelPos={Sydney:{x:336,y:194},Melbourne:{x:470,y:284}};
+  const labelPos={Sydney:{x:494,y:144},Melbourne:{x:12,y:222}};
   [SYD,MEL].forEach(S=>{
     const g=mg.append('g').attr('class','n-node');
-    const pulse=g.append('circle').attr('cx',S.x).attr('cy',S.y).attr('r',11).attr('fill','none')
-      .attr('stroke',S.glow).attr('stroke-width',1.8);
-    (function rep(){pulse.attr('r',11).attr('opacity',.75)
-      .transition().duration(2000).ease(d3.easeCubicOut).attr('r',32).attr('opacity',0)
+    const pulse=g.append('circle').attr('cx',S.x).attr('cy',S.y).attr('r',13).attr('fill','none')
+      .attr('stroke',S.glow).attr('stroke-width',2);
+    (function rep(){pulse.attr('r',13).attr('opacity',.8)
+      .transition().duration(2000).ease(d3.easeCubicOut).attr('r',38).attr('opacity',0)
       .on('end',rep);})();
-    S._core=g.append('circle').attr('cx',S.x).attr('cy',S.y).attr('r',11)
-      .attr('fill',S.col).attr('stroke','#fff').attr('stroke-width',1.8);
+    S._core=g.append('circle').attr('cx',S.x).attr('cy',S.y).attr('r',13)
+      .attr('fill',S.col).attr('stroke','#fff').attr('stroke-width',2);
     const lp=labelPos[S.name];
-    const cx=lp.x<S.x?lp.x+182:lp.x;
-    g.append('line').attr('x1',S.x).attr('y1',S.y).attr('x2',cx).attr('y2',lp.y+26)
-      .attr('stroke',S.glow).attr('stroke-width',1).attr('opacity',.45)
+    const cx=lp.x<S.x?lp.x+184:lp.x;
+    g.append('line').attr('x1',S.x).attr('y1',S.y).attr('x2',cx).attr('y2',lp.y+28)
+      .attr('stroke',S.glow).attr('stroke-width',1.2).attr('opacity',.5)
       .attr('stroke-dasharray','3,3');
-    R(g,lp.x,lp.y,182,52,{r:9,fill:C.s1,stroke:C.line});
-    T(g,lp.x+14,lp.y+22,S.name,{fs:17,fw:600});
-    T(g,lp.x+14,lp.y+37,S.role,{fs:8,mono:1,fill:S.glow,ls:1.3});
-    T(g,lp.x+14,lp.y+48,S.region,{fs:8,mono:1,fill:C.faint});
+    R(g,lp.x,lp.y,184,56,{r:10,fill:C.s1,stroke:C.line});
+    T(g,lp.x+16,lp.y+24,S.name,{fs:19,fw:600});
+    T(g,lp.x+16,lp.y+40,S.role,{fs:8.5,mono:1,fill:S.glow,ls:1.4});
+    T(g,lp.x+16,lp.y+51,S.region,{fs:8.5,mono:1,fill:C.faint});
     g.on('click',()=>{selSite=S.name;render();})
      .on('mousemove',e=>{const m=px(e);
        tip.show('<div class="tk">'+S.role+'</div><div class="tt">'+S.name+' · '+S.region+'</div><div class="td">'+S.d+'</div>',m[0],m[1]);})
