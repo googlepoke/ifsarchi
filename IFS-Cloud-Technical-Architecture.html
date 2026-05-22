@@ -1,0 +1,2652 @@
+<!DOCTYPE html>
+<!-- saved from url=(0145)file:///C:/Users/macrau/OneDrive%20-%20IFS/Documents/Claude/Projects/IFS%20Cloud%20Technical%20Architecture/IFS-Cloud-Technical-Architecture.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IFS Cloud — Technical Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="./IFS-Cloud-Technical-Architecture_files/css2" rel="stylesheet">
+<script src="./IFS-Cloud-Technical-Architecture_files/d3.min.js.download"></script>
+<style>
+/* ============================================================
+   NEXUS BLACK — design system
+   ============================================================ */
+:root{
+  --page:#090909;
+  --s1:#101011;
+  --s2:#161618;
+  --s3:#1d1d20;
+  --line:rgba(255,255,255,.08);
+  --line-2:rgba(255,255,255,.14);
+  --line-3:rgba(255,255,255,.22);
+  --tx:#F2F2F3;
+  --tx-dim:#9A9AA2;
+  --tx-faint:#65656d;
+  --v1:#48157C;
+  --v2:#8427E2;
+  --v3:#A855F7;
+  --teal:#2DD4BF;
+  --blue:#0365D8;
+  --hi:#EF4444;
+  --md:#F59E0B;
+  --lo:#27B663;
+  --ok:#0365D8;
+  --sans:'Inter Tight',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono','SF Mono',Consolas,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:var(--page);
+  color:var(--tx);
+  font-family:var(--sans);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+/* ---------- stage / scaling ---------- */
+#viewport{position:fixed;inset:0;background:var(--page);display:flex;align-items:center;justify-content:center}
+#stage{
+  position:absolute;left:50%;top:50%;
+  width:1280px;height:720px;
+  transform-origin:center center;
+}
+.slide{
+  position:absolute;inset:0;
+  width:1280px;height:720px;
+  background:var(--page);
+  opacity:0;visibility:hidden;
+  padding:64px 72px 56px;
+  transition:opacity .5s ease;
+  overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.slide.active{opacity:1;visibility:visible;z-index:2}
+.slide.active .anim{animation-play-state:running}
+/* ---------- furniture ---------- */
+.logo{
+  position:absolute;left:40px;top:40px;z-index:5;
+  display:flex;align-items:center;gap:9px;
+}
+.logo .mark{
+  font-family:var(--sans);font-weight:700;font-size:19px;letter-spacing:-.5px;
+  color:var(--tx);line-height:1;
+}
+.logo .mark b{
+  background:linear-gradient(120deg,var(--v3),var(--v2));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.logo .sub{
+  font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--tx-faint);padding-left:9px;border-left:1px solid var(--line-2);
+}
+.foot{
+  position:absolute;left:72px;right:72px;bottom:26px;z-index:5;
+  display:flex;justify-content:space-between;align-items:center;
+  font-family:var(--mono);font-size:10px;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--tx-faint);
+}
+.foot .fr{display:flex;gap:20px}
+.foot .pg b{color:var(--tx-dim)}
+/* ---------- aurora (title + dividers only) ---------- */
+.aurora{position:absolute;inset:0;overflow:hidden;z-index:0}
+.aurora i{position:absolute;border-radius:50%;filter:blur(90px);opacity:.55}
+.aurora .a1{width:620px;height:620px;background:#48157C;left:-160px;top:-220px}
+.aurora .a2{width:520px;height:520px;background:#1e3a8a;right:-160px;top:40px;opacity:.4}
+.aurora .a3{width:460px;height:460px;background:#0f766e;right:120px;bottom:-240px;opacity:.32}
+/* ---------- type ---------- */
+.kicker{
+  font-family:var(--mono);font-size:11px;letter-spacing:2.4px;text-transform:uppercase;
+  color:var(--v3);display:flex;align-items:center;gap:10px;
+}
+.kicker::before{content:"";width:22px;height:1px;background:var(--v3);display:inline-block}
+.kicker.dim{color:var(--tx-faint)}
+.kicker.dim::before{background:var(--tx-faint)}
+h1.title{font-size:43px;font-weight:600;letter-spacing:-1px;line-height:1.1}
+h2.stitle{font-size:33px;font-weight:600;letter-spacing:-.6px;line-height:1.14}
+.lead{font-size:17px;font-weight:300;line-height:1.5;color:var(--tx-dim)}
+.accent{
+  background:linear-gradient(110deg,var(--v3) 10%,var(--v2) 90%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  font-weight:600;
+}
+.mono{font-family:var(--mono)}
+strong,b{font-weight:600}
+/* ---------- generic surfaces ---------- */
+.card{
+  background:var(--s1);border:1px solid var(--line);border-radius:12px;
+  padding:18px 20px;position:relative;
+}
+.card .ct{font-size:14px;font-weight:600;letter-spacing:-.2px}
+.card .cd{font-size:12.5px;line-height:1.5;color:var(--tx-dim);font-weight:300}
+.card .cn{font-family:var(--mono);font-size:11px;color:var(--tx-faint);letter-spacing:.5px}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex:none}
+.tag{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:1px;text-transform:uppercase;
+  padding:3px 8px;border-radius:5px;border:1px solid var(--line-2);color:var(--tx-dim);
+}
+/* ---------- diagram shells ---------- */
+.diagram{position:relative;width:100%}
+.diagram svg{display:block;width:100%;height:100%;overflow:visible}
+.split .diagram{height:100%;min-height:0}
+.dg-tip{
+  position:absolute;pointer-events:none;z-index:30;
+  background:rgba(20,20,22,.97);border:1px solid var(--line-2);border-radius:9px;
+  padding:9px 12px;max-width:262px;opacity:0;transform:translateY(4px);
+  transition:opacity .14s ease,transform .14s ease;
+  box-shadow:0 18px 40px rgba(0,0,0,.6);
+}
+.dg-tip.on{opacity:1;transform:translateY(0)}
+.dg-tip .tt{font-size:12.5px;font-weight:600;margin-bottom:3px}
+.dg-tip .td{font-size:11px;line-height:1.5;color:var(--tx-dim);font-weight:300}
+.dg-tip .tk{font-family:var(--mono);font-size:9.5px;letter-spacing:.6px;color:var(--v3);text-transform:uppercase;margin-bottom:5px}
+.dg-hint{
+  position:absolute;right:2px;top:-2px;font-family:var(--mono);font-size:9.5px;
+  letter-spacing:1px;text-transform:uppercase;color:var(--tx-faint);
+  display:flex;align-items:center;gap:6px;
+}
+.dg-hint::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--v2);
+  box-shadow:0 0 0 0 rgba(132,39,226,.6);animation:pulse 2.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(132,39,226,.5)}70%{box-shadow:0 0 0 9px rgba(132,39,226,0)}100%{box-shadow:0 0 0 0 rgba(132,39,226,0)}}
+.toggle-row{display:flex;gap:6px}
+.tg{
+  font-family:var(--mono);font-size:10px;letter-spacing:.8px;text-transform:uppercase;
+  padding:6px 13px;border-radius:7px;border:1px solid var(--line-2);background:var(--s1);
+  color:var(--tx-dim);cursor:pointer;transition:all .16s ease;
+}
+.tg:hover{border-color:var(--line-3);color:var(--tx)}
+.tg.on{background:linear-gradient(120deg,var(--v1),var(--v2));border-color:transparent;color:#fff}
+/* svg shared */
+.n-node{cursor:pointer}
+.n-label{font-family:var(--sans);fill:var(--tx);font-weight:500}
+.n-mono{font-family:var(--mono);fill:var(--tx-faint)}
+.n-sub{font-family:var(--sans);fill:var(--tx-dim);font-weight:300}
+/* ---------- progress + nav ---------- */
+#progress{position:fixed;left:0;top:0;height:2px;background:linear-gradient(90deg,var(--v2),var(--v3));z-index:50;transition:width .4s ease}
+#nav{position:fixed;right:18px;bottom:14px;z-index:50;display:flex;gap:7px;align-items:center}
+.navbtn{
+  width:30px;height:30px;border-radius:7px;border:1px solid var(--line-2);
+  background:rgba(20,20,22,.8);color:var(--tx-dim);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s ease;
+}
+.navbtn:hover{border-color:var(--line-3);color:var(--tx);background:var(--s2)}
+.navbtn svg{width:13px;height:13px}
+#cnt{font-family:var(--mono);font-size:11px;color:var(--tx-faint);letter-spacing:1px;padding:0 6px}
+#cnt b{color:var(--tx)}
+/* ---------- speaker notes ---------- */
+#notes{
+  position:fixed;left:0;right:0;bottom:0;z-index:60;
+  background:rgba(13,13,14,.985);border-top:1px solid var(--line-2);
+  transform:translateY(100%);transition:transform .32s cubic-bezier(.4,0,.2,1);
+  max-height:42vh;overflow-y:auto;backdrop-filter:blur(8px);
+}
+#notes.on{transform:translateY(0)}
+#notes .nhead{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:11px 24px;border-bottom:1px solid var(--line);position:sticky;top:0;
+  background:rgba(13,13,14,.99);
+}
+#notes .nhead .nt{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--v3)}
+#notes .nhead .nx{font-family:var(--mono);font-size:10px;color:var(--tx-faint)}
+#notes .nbody{padding:16px 24px 22px;font-size:13.5px;line-height:1.62;color:var(--tx-dim);font-weight:300;max-width:1000px}
+#notes .nbody h4{color:var(--tx);font-size:12px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1.4px;margin:14px 0 6px;font-weight:500}
+#notes .nbody h4:first-child{margin-top:0}
+#notes .nbody p{margin-bottom:8px}
+#notes .nbody b{color:var(--tx)}
+.notes-data{display:none}
+/* ---------- help overlay ---------- */
+#help{
+  position:fixed;inset:0;z-index:80;background:rgba(7,7,7,.92);
+  display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);
+}
+#help.on{display:flex}
+#help .hc{
+  background:var(--s1);border:1px solid var(--line-2);border-radius:14px;
+  padding:32px 38px;max-width:440px;
+}
+#help h3{font-size:18px;font-weight:600;margin-bottom:18px}
+#help .hr{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--tx-dim)}
+#help .hr:last-child{border:0}
+#help kbd{
+  font-family:var(--mono);font-size:11px;background:var(--s3);border:1px solid var(--line-2);
+  border-radius:5px;padding:3px 8px;color:var(--tx);
+}
+#hintbar{
+  position:fixed;left:18px;bottom:16px;z-index:50;
+  font-family:var(--mono);font-size:10px;letter-spacing:.6px;color:var(--tx-faint);
+}
+#hintbar kbd{background:var(--s2);border:1px solid var(--line);border-radius:4px;padding:2px 6px;color:var(--tx-dim)}
+/* ---------- title slide ---------- */
+.cover{display:flex;flex-direction:column;justify-content:center;height:100%;position:relative;z-index:2}
+.cover .ttl{font-size:62px;font-weight:600;letter-spacing:-2px;line-height:1.04;margin:22px 0 0}
+.cover .subttl{font-size:18px;font-weight:300;color:var(--tx-dim);margin-top:22px;max-width:680px;line-height:1.5}
+.cover .meta{display:flex;gap:34px;margin-top:40px}
+.cover .meta .mi .ml{font-family:var(--mono);font-size:9.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--tx-faint)}
+.cover .meta .mi .mv{font-size:14px;font-weight:500;margin-top:5px}
+/* ---------- divider ---------- */
+.divwrap{display:flex;flex-direction:column;justify-content:center;height:100%;position:relative;z-index:2}
+.divwrap .dnum{font-family:var(--mono);font-size:15px;color:var(--v3);letter-spacing:3px}
+.divwrap .dttl{font-size:54px;font-weight:600;letter-spacing:-1.6px;margin-top:14px;line-height:1.06}
+.divwrap .dlead{font-size:16px;font-weight:300;color:var(--tx-dim);margin-top:20px;max-width:600px;line-height:1.55}
+.divwrap .dpoints{display:flex;gap:14px;margin-top:34px}
+.divwrap .dp{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.6px;color:var(--tx-dim);
+  border:1px solid var(--line-2);border-radius:8px;padding:9px 14px;background:rgba(16,16,17,.6);
+}
+.divwrap .dp b{color:var(--v3)}
+/* ---------- layout helpers ---------- */
+.head{margin-bottom:22px}
+.head h2{margin-top:11px}
+.head .lead{margin-top:9px;max-width:880px}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.split{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1fr);gap:26px;height:100%}
+.split.wide-l{grid-template-columns:1.32fr 1fr}
+.split.wide-r{grid-template-columns:1fr 1.32fr}
+.vcenter{display:flex;flex-direction:column;justify-content:center}
+.fill{height:100%;display:flex;flex-direction:column}
+.flex1{flex:1;min-height:0}
+/* stat tiles */
+.stat{background:var(--s1);border:1px solid var(--line);border-radius:12px;padding:20px;position:relative;overflow:hidden}
+.stat .sv{font-family:var(--mono);font-size:40px;font-weight:600;letter-spacing:-1px;line-height:1}
+.stat .sl{font-size:13px;font-weight:600;margin-top:10px}
+.stat .sd{font-size:11.5px;line-height:1.5;color:var(--tx-dim);font-weight:300;margin-top:5px}
+.stat .sbar{position:absolute;left:0;top:0;bottom:0;width:3px}
+/* feature list */
+.flist{display:flex;flex-direction:column;gap:10px}
+.fitem{display:flex;gap:13px;align-items:flex-start}
+.fitem .fi-ic{
+  width:30px;height:30px;border-radius:8px;flex:none;border:1px solid var(--line-2);
+  display:flex;align-items:center;justify-content:center;background:var(--s2);
+  font-family:var(--mono);font-size:12px;color:var(--v3);font-weight:600;
+}
+.fitem .fi-t{font-size:13.5px;font-weight:600}
+.fitem .fi-d{font-size:12px;line-height:1.5;color:var(--tx-dim);font-weight:300;margin-top:2px}
+.recap-num{font-family:var(--mono);font-size:12px;color:var(--v3);width:30px;flex:none}
+/* misc */
+.pill-list{display:flex;flex-wrap:wrap;gap:7px}
+.kv{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.kv:last-child{border:0}
+.kv .kk{color:var(--tx-dim);font-weight:300}
+.kv .vv{font-family:var(--mono);font-size:11.5px;color:var(--tx)}
+.callout{
+  border-left:2px solid var(--v2);padding:11px 0 11px 16px;
+  font-size:13px;line-height:1.55;color:var(--tx-dim);font-weight:300;
+}
+.callout b{color:var(--tx)}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--s3);border-radius:5px}
+::-webkit-scrollbar-track{background:transparent}
+</style>
+</head>
+<body>
+<div id="progress" style="width: 5%;"></div>
+<div id="viewport"><div id="stage" style="transform: translate(-50%, -50%) scale(1.75556);">
+<!-- ============ 01 · TITLE ============ -->
+<section class="slide" id="s01" data-label="Title">
+  <div class="aurora"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div>
+  <div class="cover">
+    <div class="kicker">Technical architecture &nbsp;·&nbsp; enterprise briefing</div>
+    <h1 class="ttl">One <span class="accent">evergreen</span> platform.<br>Built to scale, secure, and stay sovereign.</h1>
+    <p class="subttl">A technical walkthrough of IFS Cloud — architecture and integration, scalability and security, and deployment within Australia.</p>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>01</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Open</h4>
+    <p>Set the frame. This is a <b>technical</b> session — architecture, not features. The goal is to give your architects and security team enough to assess IFS Cloud as a platform, not just an application.</p>
+    <h4>The thesis to land</h4>
+    <p>IFS Cloud is a single, cloud-native, evergreen platform. Three properties matter to this audience: it <b>scales</b> on a containerised, Kubernetes-based runtime; it is <b>secure</b> by design and independently certified; and it can be deployed <b>sovereign</b> to Australia with primary hosting in Sydney and disaster recovery in Melbourne.</p>
+    <h4>Logistics</h4>
+    <p>Ninety minutes, three topics, roughly thirty minutes each. Nine diagrams are interactive — click layers, hover for detail. Encourage questions throughout; flag that there is a recap after each topic and a Q&amp;A block at the end.</p>
+  </div>
+</section>
+
+<!-- ============ 02 · AGENDA ============ -->
+<section class="slide active" id="s02" data-label="Agenda">
+  <div class="head">
+    <div class="kicker">Session structure</div>
+    <h2 class="stitle">Three topics, one architecture story</h2>
+  </div>
+  <div class="grid g3" style="margin-top:8px">
+    <div class="card" style="padding:22px">
+      <div class="tag" style="color:var(--v3);border-color:var(--v3)">Topic 01</div>
+      <div class="ct" style="font-size:17px;margin-top:14px">Architecture &amp; integration</div>
+      <div class="cd" style="margin-top:8px">Design principles, the layered multi-tier model, the technology stack, and the four ways to integrate with IFS Cloud.</div>
+      
+    </div>
+    <div class="card" style="padding:22px">
+      <div class="tag" style="color:var(--v3);border-color:var(--v3)">Topic 02</div>
+      <div class="ct" style="font-size:17px;margin-top:14px">Scale, secure, extend</div>
+      <div class="cd" style="margin-top:8px">Kubernetes scalability, defence-in-depth security, certifications and internal controls, and the extensibility model.</div>
+      
+    </div>
+    <div class="card" style="padding:22px">
+      <div class="tag" style="color:var(--v3);border-color:var(--v3)">Topic 03</div>
+      <div class="ct" style="font-size:17px;margin-top:14px">Deployment in Australia</div>
+      <div class="cd" style="margin-top:8px">The managed cloud service, the shared responsibility model, and hosting on Azure — Sydney primary, Melbourne disaster recovery.</div>
+      
+    </div>
+  </div>
+  <div class="grid g3" style="margin-top:12px">
+    
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>02</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Frame the ninety minutes</h4>
+    <p>Walk the three topics. Each is self-contained and ends in a recap, so latecomers or partial attendees still get value. Topic 1 is the foundation — architecture and integration. Topic 2 is what most security and infrastructure reviewers care about. Topic 3 is specific to this prospect's Australian footprint.</p>
+    <h4>Manage expectations</h4>
+    <p>This is a reference deck — it doubles as a leave-behind. Tell the audience they do not need to capture everything; they will get the file. Ask them to hold detailed commercial questions (pricing, licensing) and keep the discussion technical.</p>
+    <h4>Interactivity</h4>
+    <p>Demonstrate the diagram interaction once here so the room knows the diagrams are live, not screenshots.</p>
+  </div>
+</section>
+
+<!-- ============ 03 · DIVIDER — TOPIC 1 ============ -->
+<section class="slide" id="s03" data-label="Divider · Topic 1">
+  <div class="aurora"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div>
+  <div class="divwrap">
+    <div class="dnum">TOPIC 01</div>
+    <h2 class="dttl">Architecture principles<br>and integration</h2>
+    <p class="dlead">How IFS Cloud is built — a layered, multi-tier, service-oriented architecture — and the four supported routes for connecting it to the wider IT landscape.</p>
+    <div class="dpoints">
+      <div class="dp"><b>›</b> &nbsp;Layered multi-tier SOA</div>
+      <div class="dp"><b>›</b> &nbsp;Containerised middle tier</div>
+      <div class="dp"><b>›</b> &nbsp;100% open APIs</div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>03</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Transition</h4>
+    <p>This topic answers the architect's first question: <b>what is this thing actually built from?</b> We cover the design principles, the tier model, the technology stack, and integration.</p>
+    <h4>Set the tone</h4>
+    <p>Emphasise that IFS Cloud is <b>one platform</b> — not a suite of stitched-together products. Every functional area (ERP, EAM, service management) runs on the same architecture, the same APIs, the same security model. That consistency is the recurring theme of this topic.</p>
+  </div>
+</section>
+
+<!-- ============ 04 · ARCHITECTURE PRINCIPLES ============ -->
+<section class="slide" id="s04" data-label="Architecture principles">
+  <div class="head">
+    <div class="kicker">Topic 01 · Design tenets</div>
+    <h2 class="stitle">Six principles that shape the platform</h2>
+    <p class="lead">IFS Cloud is a cloud-native platform that delivers ERP, EAM, and service management capability from one common architecture. Six design tenets govern every layer.</p>
+  </div>
+  <div class="grid g3" style="grid-template-rows:1fr 1fr;gap:12px">
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:9px"><span class="dot" style="background:var(--v3)"></span><div class="ct">Cloud-native by design</div></div>
+      <div class="cd" style="margin-top:8px">Containerised services, orchestrated and elastic. Built for the cloud first — and still deployable on-premise where required.</div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:9px"><span class="dot" style="background:var(--v3)"></span><div class="ct">One common platform</div></div>
+      <div class="cd" style="margin-top:8px">A single codebase and data model. Every functional area shares the same UX, APIs, and security model — no integration tax between modules.</div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:9px"><span class="dot" style="background:var(--v3)"></span><div class="ct">Layered multi-tier SOA</div></div>
+      <div class="cd" style="margin-top:8px">Presentation, middle, and data tiers — each with a defined job and a clean, standard interface to the others.</div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:9px"><span class="dot" style="background:var(--teal)"></span><div class="ct">Open &amp; connected</div></div>
+      <div class="cd" style="margin-top:8px">100% open REST APIs on the OData standard. The same business logic serves the UI and every integration — nothing is closed off.</div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:9px"><span class="dot" style="background:var(--teal)"></span><div class="ct">Evergreen delivery</div></div>
+      <div class="cd" style="margin-top:8px">Bi-annual Release Updates and monthly Service Updates. Customers stay current without costly re-implementation projects.</div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:9px"><span class="dot" style="background:var(--blue)"></span><div class="ct">Residency of choice</div></div>
+      <div class="cd" style="margin-top:8px">Hosting geography is selectable to meet data-sovereignty and latency requirements — including primary residency within Australia.</div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>04</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>The core message</h4>
+    <p>These six tenets are not marketing — they are constraints the engineering organisation actually holds itself to. Walk them in two groups.</p>
+    <h4>Group one — how it is built</h4>
+    <p><b>Cloud-native, one platform, layered SOA.</b> The single most important point: IFS Cloud is one codebase and one data model. When a customer adopts ERP today and EAM next year, there is no middleware project to join them — they are already the same system.</p>
+    <h4>Group two — how it behaves</h4>
+    <p><b>Open, evergreen, residency of choice.</b> Open means every capability in the product is reachable by API. Evergreen means no upgrade projects — updates are continuous. Residency of choice is the bridge to Topic 3 — hosting can be pinned to Australia.</p>
+    <h4>Anticipate</h4>
+    <p>If asked about on-premise: yes, the same architecture deploys on-premise as a "Remote" model — but the cloud service is the recommended and default path.</p>
+  </div>
+</section>
+
+<!-- ============ 05 · LAYERED ARCHITECTURE (INTERACTIVE) ============ -->
+<section class="slide" id="s05" data-label="Layered architecture">
+  <div class="split wide-r">
+    <div class="vcenter">
+      <div class="kicker">Topic 01 · Interactive</div>
+      <h2 class="stitle" style="margin-top:11px">The layered, multi-tier model</h2>
+      <p class="lead" style="margin-top:12px">IFS Cloud's service-oriented architecture is both layered and multi-tiered. Each tier does one job, in a standard way, with a clean interface to the tiers around it.</p>
+      <div class="callout" style="margin-top:18px"><b>Why it matters.</b> The strict separation means the UI, mobile, and integrations all reach the <b>same</b> business logic — there is no second, weaker path into the data.</div>
+      <div style="margin-top:18px;display:flex;flex-direction:column;gap:9px">
+        <div class="kv"><span class="kk">Presentation tier</span><span class="vv">HTTPS clients</span></div>
+        <div class="kv"><span class="kk">Middle tier</span><span class="vv">Containerised services</span></div>
+        <div class="kv"><span class="kk">Data tier</span><span class="vv">Oracle / Azure SQL</span></div>
+      </div>
+      <div class="dg-hint" style="position:static;margin-top:18px">Click a tier to expand it</div>
+    </div>
+    <div class="diagram" id="dg-layers"></div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>05</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Drive the diagram</h4>
+    <p>Click each tier in turn — top to bottom. The diagram expands to show what lives in that tier.</p>
+    <h4>Presentation tier</h4>
+    <p>Human users and devices. Web browser, mobile apps, Office add-ins. All clients reach the platform over <b>HTTPS</b> — which passes cleanly through firewalls and proxies. No special client networking.</p>
+    <h4>Middle tier</h4>
+    <p>Where the business logic and integration services run, delivered as <b>Docker containers orchestrated by Kubernetes</b>. This is the layer that scales — hold detail for Topic 2.</p>
+    <h4>Data tier</h4>
+    <p>Fully normalised relational storage on <b>Oracle RDBMS</b>, with Azure SQL used for certain modules. The critical control point: data can <b>only</b> be reached and modified through the business logic — never by writing directly to tables. That is what guarantees data integrity.</p>
+    <h4>Land it</h4>
+    <p>One business logic layer, many clients. Security and validation are enforced once, centrally — not re-implemented per channel.</p>
+  </div>
+</section>
+
+<!-- ============ 06 · TECHNOLOGY STACK ============ -->
+<section class="slide" id="s06" data-label="Technology stack">
+  <div class="head">
+    <div class="kicker">Topic 01 · What runs where</div>
+    <h2 class="stitle">The technology stack, tier by tier</h2>
+    <p class="lead">Each tier is built on proven, enterprise-grade technology — and an automated delivery pipeline keeps every environment consistent.</p>
+  </div>
+  <div class="grid g4" style="margin-top:6px">
+    <div class="card" style="border-top:2px solid var(--v3)">
+      <div class="cn" style="color:var(--v3)">PRESENTATION</div>
+      <div class="ct" style="margin-top:9px">Clients</div>
+      <div class="flist" style="margin-top:12px">
+        <div class="fitem"><div class="fi-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="15" rx="2"/><path d="M3 9h18"/></svg></div><div><div class="fi-t">Aurena web client</div><div class="fi-d">HTML5, responsive, any device</div></div></div>
+        <div class="fitem"><div class="fi-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2.5"/><path d="M10.5 17.5h3"/></svg></div><div><div class="fi-t">Mobile apps</div><div class="fi-d">Native iOS &amp; Android</div></div></div>
+        <div class="fitem"><div class="fi-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.3"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.3"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.3"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.3"/></svg></div><div><div class="fi-t">Office add-ins</div><div class="fi-d">Productivity-tool integration</div></div></div>
+      </div>
+    </div>
+    <div class="card" style="border-top:2px solid var(--v2)">
+      <div class="cn" style="color:var(--v3)">MIDDLE TIER</div>
+      <div class="ct" style="margin-top:9px">Services</div>
+      <div class="flist" style="margin-top:12px">
+        <div class="fitem"><div class="fi-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><circle cx="12" cy="12" r="2.5"/></svg></div><div><div class="fi-t">Kubernetes</div><div class="fi-d">Orchestrates Docker containers</div></div></div>
+        <div class="fitem"><div class="fi-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 7-5 5 5 5"/><path d="m15 7 5 5-5 5"/></svg></div><div><div class="fi-t">OData API back-end</div><div class="fi-d">Serves all REST traffic</div></div></div>
+        <div class="fitem"><div class="fi-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 4.5 5.5v6c0 5 7.5 9.5 7.5 9.5s7.5-4.5 7.5-9.5v-6z"/><path d="m9 12 2 2 4-4"/></svg></div><div><div class="fi-t">IAM &amp; Client Services</div><div class="fi-d">Identity, sessions, routing</div></div></div>
+      </div>
+    </div>
+    <div class="card" style="border-top:2px solid var(--teal)">
+      <div class="cn" style="color:var(--v3)">DATA TIER</div>
+      <div class="ct" style="margin-top:9px">Storage</div>
+      <div class="flist" style="margin-top:12px">
+        <div class="fitem"><div class="fi-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v13c0 1.66 3.6 3 8 3s8-1.34 8-3v-13"/><path d="M4 12c0 1.66 3.6 3 8 3s8-1.34 8-3"/></svg></div><div><div class="fi-t">Oracle RDBMS</div><div class="fi-d">Primary relational store</div></div></div>
+        <div class="fitem"><div class="fi-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18.5a4 4 0 0 0 .4-8 6 6 0 0 0-11.3-1.6A3.8 3.8 0 0 0 6.5 18.5z"/></svg></div><div><div class="fi-t">Azure SQL</div><div class="fi-d">For selected modules</div></div></div>
+        <div class="fitem"><div class="fi-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg></div><div><div class="fi-t">PL/SQL business logic</div><div class="fi-d">The only path to the data</div></div></div>
+      </div>
+    </div>
+    <div class="card" style="border-top:2px solid var(--blue)">
+      <div class="cn" style="color:var(--v3)">DELIVERY</div>
+      <div class="ct" style="margin-top:9px">Pipeline</div>
+      <div class="flist" style="margin-top:12px">
+        <div class="fitem"><div class="fi-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg></div><div><div class="fi-t">Azure DevOps CI/CD</div><div class="fi-d">Automated build &amp; deploy</div></div></div>
+        <div class="fitem"><div class="fi-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div><div><div class="fi-t">HELM charts</div><div class="fi-d">Declarative deployment</div></div></div>
+        <div class="fitem"><div class="fi-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div><div class="fi-t">Monitoring stack</div><div class="fi-d">Logs &amp; metrics, always on</div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:14px"><b>Self-service control.</b> Release deployments are triggered by the customer through the Application Lifecycle Experience (ALE) portal — the pipeline is automated, but the customer decides when changes land.</div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>06</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Purpose</h4>
+    <p>This slide answers "what is it actually made of" with named, recognisable technology. Architects want to see Oracle, Kubernetes, Azure DevOps — not abstractions.</p>
+    <h4>Walk the four columns</h4>
+    <p><b>Presentation</b> — Aurena is the HTML5 web client; the same application is reachable on mobile and through Office add-ins. <b>Middle tier</b> — Kubernetes orchestrates Docker containers; the OData back-end and IAM are themselves containerised services. <b>Data</b> — Oracle is primary, Azure SQL for certain modules; PL/SQL business logic is the enforced gate. <b>Delivery</b> — Azure DevOps pipelines with HELM charts deploy everything.</p>
+    <h4>The point to stress</h4>
+    <p>The delivery pipeline is automated but <b>customer-triggered</b>. Through the ALE portal the customer controls timing — updates do not arrive unannounced. This matters to change-management-conscious IT teams.</p>
+  </div>
+</section>
+
+<!-- ============ 07 · CONTAINER TOPOLOGY (INTERACTIVE) ============ -->
+<section class="slide" id="s07" data-label="Container topology">
+  <div class="head">
+    <div class="kicker">Topic 01 · Interactive</div>
+    <h2 class="stitle">Containerised deployment topology</h2>
+    <p class="lead">The middle tier is a set of Linux Docker containers running in a Kubernetes cluster. A shared ingress proxy routes traffic to the correct environment namespace.</p>
+  </div>
+  <div class="diagram flex1" id="dg-container" style="margin-top:4px"></div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>07</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Drive the diagram</h4>
+    <p>Traffic enters at the left. Click the <b>ingress proxy</b> first, then each namespace. Hover any container to see what it does.</p>
+    <h4>The shared ingress</h4>
+    <p>One Kubernetes cluster can host one or many IFS Cloud installations. A shared ingress proxy inspects incoming requests and routes each to the correct <b>namespace</b> — the isolation boundary for an environment.</p>
+    <h4>Namespaces and containers</h4>
+    <p>Each environment — production, test, configuration — is a namespace holding its own set of containers: the OData API back-end, IAM, client services, integration services. They are independently versioned and independently scaled.</p>
+    <h4>Why containers</h4>
+    <p>Containerisation gives efficient resource use and makes updating or patching a service a clean, low-risk operation — replace the container image, the orchestrator rolls it in. This is also the foundation of the scalability story in Topic 2.</p>
+  </div>
+</section>
+
+<!-- ============ 08 · AURENA + MIDDLE TIER ============ -->
+<section class="slide" id="s08" data-label="Aurena &amp; middle tier">
+  <div class="split">
+    <div class="vcenter">
+      <div class="kicker">Topic 01 · Client &amp; logic</div>
+      <h2 class="stitle" style="margin-top:11px">One client, one logic layer</h2>
+      <p class="lead" style="margin-top:12px">Aurena is the state-of-the-art HTML5 web client. Users reach the entire application from any device, with no installed software.</p>
+      <div class="flist" style="margin-top:18px">
+        <div class="fitem"><div class="fi-ic">1</div><div><div class="fi-t">Browser-based, responsive</div><div class="fi-d">The full application in any modern browser — desktop, tablet, or phone — designed with consumer-grade UX principles.</div></div></div>
+        <div class="fitem"><div class="fi-ic">2</div><div><div class="fi-t">Configurable lobbies</div><div class="fi-d">Role-based dashboards assembled from the data model — tailored without writing code.</div></div></div>
+        <div class="fitem"><div class="fi-ic">3</div><div><div class="fi-t">Same logic, every channel</div><div class="fi-d">Aurena, mobile apps, and integrations all invoke the identical middle-tier business logic.</div></div></div>
+      </div>
+    </div>
+    <div class="vcenter">
+      <div class="card" style="background:var(--s1);padding:22px">
+        <div class="cn" style="color:var(--v3)">MIDDLE-TIER SERVICES</div>
+        <div class="ct" style="font-size:16px;margin-top:8px">What the containers run</div>
+        <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+          <div class="card" style="background:var(--s2);padding:13px 15px">
+            <div class="ct" style="font-size:13px">OData API back-end</div>
+            <div class="cd" style="margin-top:3px">Exposes all business logic as REST services on the OData standard.</div>
+          </div>
+          <div class="card" style="background:var(--s2);padding:13px 15px">
+            <div class="ct" style="font-size:13px">Identity &amp; Access Manager</div>
+            <div class="cd" style="margin-top:3px">Authentication, sessions, and permission enforcement at the gateway.</div>
+          </div>
+          <div class="card" style="background:var(--s2);padding:13px 15px">
+            <div class="ct" style="font-size:13px">Client &amp; integration services</div>
+            <div class="cd" style="margin-top:3px">Serve the Aurena client and broker messages to external systems.</div>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:16px">All access — UI, mobile, integration — passes through these services over <b>HTTPS</b>. There is no privileged side door.</div>
+      </div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>08</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Two ideas</h4>
+    <p>Left — the client. Right — the services behind it. Keep them linked: the client is thin, the logic is central.</p>
+    <h4>Aurena</h4>
+    <p>HTML5, nothing to install, works on any device. Lobbies are configurable role-based dashboards — power users assemble them without code. For a telco-style organisation with a large, distributed workforce, zero client footprint is operationally significant.</p>
+    <h4>The middle tier</h4>
+    <p>Three service groups: the OData API back-end, the IAM, and client/integration services. The line to repeat: <b>every</b> channel goes through these same services over HTTPS. Security is enforced once. There is no faster, less-secure path for integrations — they use the front door like everyone else.</p>
+  </div>
+</section>
+
+<!-- ============ 09 · INTEGRATION PHILOSOPHY ============ -->
+<section class="slide" id="s09" data-label="Integration philosophy">
+  <div class="head">
+    <div class="kicker">Topic 01 · Integration</div>
+    <h2 class="stitle">Integration philosophy — open by default</h2>
+    <p class="lead">IFS's service-oriented architecture is open: external applications access information and invoke functionality the same way IFS Cloud's own clients do. There is no closed core.</p>
+  </div>
+  <div class="split" style="margin-top:6px;height:auto">
+    <div>
+      <div class="card" style="height:100%">
+        <div class="ct" style="font-size:15px">Two integration shapes</div>
+        <div style="margin-top:14px;display:flex;flex-direction:column;gap:15px">
+          <div>
+            <span class="tag" style="color:var(--md);border-color:var(--md)">Point-to-point</span>
+            <div class="cd" style="margin-top:8px">Direct system-to-system links. Fast to stand up, but link count grows with every new system added.</div>
+          </div>
+          <div>
+            <span class="tag" style="color:var(--lo);border-color:var(--lo)">Digital switchboard</span>
+            <div class="cd" style="margin-top:8px">A central integration hub. Complex routing and transformation move out of the endpoints into one governed layer.</div>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:16px">Most landscapes use <b>both</b>. The discipline is choosing deliberately — a defined integration strategy, not accumulated point-to-point debt.</div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="height:100%;background:var(--s1)">
+        <div class="cn" style="color:var(--v3)">DESIGN STANCE</div>
+        <div class="ct" style="font-size:15px;margin-top:8px">Connect to the Core</div>
+        <div class="flist" style="margin-top:14px">
+          <div class="fitem"><div class="fi-ic">°</div><div><div class="fi-t">API-first</div><div class="fi-d">Every capability is reachable through a documented API — the UI uses the same ones.</div></div></div>
+          <div class="fitem"><div class="fi-ic">≡</div><div><div class="fi-t">Standards-based</div><div class="fi-d">REST on the OData standard; IFS is a member of the OpenAPI initiative.</div></div></div>
+          <div class="fitem"><div class="fi-ic">✓</div><div><div class="fi-t">Integrity-preserving</div><div class="fi-d">Inbound data always passes through business logic — never written straight to tables.</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>09</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>The stance</h4>
+    <p>"Open" is concrete here: external systems use the <b>same</b> interfaces as IFS Cloud's own clients. There is no private API the product keeps for itself.</p>
+    <h4>Two shapes</h4>
+    <p>Point-to-point is direct and quick but the link count explodes — n systems, up to n-squared links. The digital switchboard centralises routing and transformation in one hub. Neither is universally right; the message is to <b>choose deliberately</b> and hold an integration strategy, rather than letting point-to-point links accumulate as debt.</p>
+    <h4>Integrity</h4>
+    <p>Critical point for data-governance reviewers: inbound integration data always passes through business logic. It is never inserted directly into tables. Bad data is rejected at the door, not discovered downstream.</p>
+    <h4>Bridge</h4>
+    <p>Next three slides are the concrete options — REST/OData, IFS Connect, and event/file mechanisms.</p>
+  </div>
+</section>
+
+<!-- ============ 10 · REST / ODATA APIs ============ -->
+<section class="slide" id="s10" data-label="REST &amp; OData APIs">
+  <div class="head">
+    <div class="kicker">Topic 01 · Integration option 1 of 3</div>
+    <h2 class="stitle">REST APIs on the OData standard</h2>
+    <p class="lead">The primary integration route. IFS Cloud ships with complete REST API coverage — lightweight, cloud-friendly, and the same interface the product's own UI consumes.</p>
+  </div>
+  <div class="grid g3" style="margin-top:6px">
+    <div class="stat"><div class="sbar" style="background:var(--v2)"></div><div class="sv">5,000+</div><div class="sl">Pre-packaged APIs</div><div class="sd">Each spanning a handful to dozens of entity sets and actions — shipped, not built.</div></div>
+    <div class="stat"><div class="sbar" style="background:var(--v3)"></div><div class="sv">100%</div><div class="sl">Functional coverage</div><div class="sd">Both the services layer and the business logic are reachable by external applications.</div></div>
+    <div class="stat"><div class="sbar" style="background:var(--teal)"></div><div class="sv">OData</div><div class="sl">Open standard</div><div class="sd">REST on OData — lightweight, non-resource-intensive, easy to consume.</div></div>
+  </div>
+  <div class="split" style="margin-top:14px;height:auto">
+    <div class="card">
+      <div class="ct" style="font-size:14px">Projection-based APIs</div>
+      <div class="cd" style="margin-top:7px">APIs are exposed as <b>projections</b> — purpose-shaped views over the entity model. A projection presents exactly the data and actions an integration needs, and nothing more. New projections are added without disturbing existing ones.</div>
+    </div>
+    <div class="card">
+      <div class="ct" style="font-size:14px">Why REST &amp; OData</div>
+      <div class="cd" style="margin-top:7px">The cloud-friendly, non-resource-intensive choice for interoperability — and the preferred basis for new user experiences, IoT, augmented reality, and AI services. IFS actively drives open API standards as an OpenAPI initiative member.</div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>10</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>This is the default route</h4>
+    <p>If a reviewer remembers one integration slide, it should be this one. REST on OData is how the modern landscape connects to IFS Cloud.</p>
+    <h4>The numbers</h4>
+    <p>5,000-plus APIs ship pre-packaged — that is coverage, not a starting point. 100% means the services layer <b>and</b> the business logic are both reachable. OData keeps payloads light and easy to consume.</p>
+    <h4>Projections — the part architects probe</h4>
+    <p>APIs are exposed as projections: purpose-built views over the entity model. An integration gets a projection scoped to exactly what it needs. This is good security practice — least exposure — and good lifecycle practice: adding a projection does not destabilise existing ones.</p>
+    <h4>Forward-looking</h4>
+    <p>REST/OData is also the substrate for IoT, AR, and embedded AI. Choosing it is choosing the same foundation IFS builds its own innovation on.</p>
+  </div>
+</section>
+
+<!-- ============ 11 · IFS CONNECT ============ -->
+<section class="slide" id="s11" data-label="IFS Connect">
+  <div class="head">
+    <div class="kicker">Topic 01 · Integration option 2 of 3</div>
+    <h2 class="stitle">IFS Connect — the built-in integration broker</h2>
+    <p class="lead">For message-based, protocol-diverse integration, IFS Connect is a broker built into the platform — no separate product to license or operate.</p>
+  </div>
+  <div class="split wide-l" style="margin-top:6px;height:auto">
+    <div class="card">
+      <div class="ct" style="font-size:14px">Broker features</div>
+      <div class="grid g2" style="margin-top:12px;gap:9px">
+        <div class="card" style="background:var(--s2);padding:11px 13px"><div class="ct" style="font-size:12.5px">Content-based routing</div><div class="cd" style="margin-top:2px">Route messages by payload content</div></div>
+        <div class="card" style="background:var(--s2);padding:11px 13px"><div class="ct" style="font-size:12.5px">Transformation</div><div class="cd" style="margin-top:2px">XSLT or Java message transforms</div></div>
+        <div class="card" style="background:var(--s2);padding:11px 13px"><div class="ct" style="font-size:12.5px">Store &amp; forward</div><div class="cd" style="margin-top:2px">Queue, retry, and archive</div></div>
+        <div class="card" style="background:var(--s2);padding:11px 13px"><div class="ct" style="font-size:12.5px">Central administration</div><div class="cd" style="margin-top:2px">Master/slave routing model</div></div>
+      </div>
+      <div class="callout" style="margin-top:14px">IFS Connect covers the integration features most projects need — it is deliberately <b>not</b> a full enterprise service bus. For ESB-class needs, pair it with an external broker (next slide).</div>
+    </div>
+    <div class="card" style="background:var(--s1)">
+      <div class="cn" style="color:var(--v3)">TRANSPORT CONNECTORS</div>
+      <div class="ct" style="font-size:13px;margin-top:8px">Protocols out of the box</div>
+      <div class="pill-list" style="margin-top:12px">
+        <span class="tag">SOAP</span><span class="tag">HTTP/S</span><span class="tag">REST</span>
+        <span class="tag">SFTP</span><span class="tag">FTP</span><span class="tag">FILE</span>
+        <span class="tag">SMTP / POP3</span><span class="tag">WebSphere MQ</span><span class="tag">BPEL</span>
+      </div>
+      <div class="cd" style="margin-top:14px">Connect also drives platform features — business-event notifications, electronic distribution of reports as XML or PDF, and replication traffic over any supported protocol.</div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>11</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>When this matters</h4>
+    <p>REST/OData covers modern, synchronous integration. IFS Connect covers the rest — message-based, asynchronous, protocol-diverse integration with legacy and partner systems.</p>
+    <h4>Built in</h4>
+    <p>Stress: Connect is part of the platform. No separate licence, no separate server to operate. It provides content-based routing, XSLT/Java transformation, store-and-forward with retry and archiving, and central administration.</p>
+    <h4>Connectors</h4>
+    <p>The connector list — SOAP, HTTP/S, REST, SFTP, FTP, file, mail, WebSphere MQ, BPEL — is what lets it reach older systems that do not speak REST.</p>
+    <h4>Be honest about scope</h4>
+    <p>Connect is intentionally not a full ESB. Say so plainly — architects respect the precision. If the customer needs ESB-class orchestration, that is the external-broker pattern on the next slide.</p>
+  </div>
+</section>
+
+<!-- ============ 12 · EVENTS / FILE / EXTERNAL BROKER ============ -->
+<section class="slide" id="s12" data-label="Events, files, iPaaS">
+  <div class="head">
+    <div class="kicker">Topic 01 · Integration option 3 of 3</div>
+    <h2 class="stitle">Events, data movement, and external brokers</h2>
+    <p class="lead">Beyond synchronous APIs, IFS Cloud supports event-driven notification, bulk and replicated data movement, and a hub-and-spoke pattern using an external iPaaS.</p>
+  </div>
+  <div class="grid g3" style="margin-top:6px">
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:9px"><span class="dot" style="background:var(--v3)"></span><div class="ct" style="font-size:14px">Business events</div></div>
+      <div class="cd" style="margin-top:9px">The platform raises business-event notifications that external systems subscribe to through IFS Connect — and triggers electronic distribution of reports as XML or PDF.</div>
+      <div class="cn" style="margin-top:12px">PUSH · EVENT-DRIVEN</div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:9px"><span class="dot" style="background:var(--teal)"></span><div class="ct" style="font-size:14px">Data migration &amp; replication</div></div>
+      <div class="cd" style="margin-top:9px">In-solution tools import from any database or flat file via staged loading tables — with cleansing and quality checks. Configurable for real-time replication between systems.</div>
+      <div class="cn" style="margin-top:12px">BULK · STAGED</div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:9px"><span class="dot" style="background:var(--blue)"></span><div class="ct" style="font-size:14px">External broker — iPaaS</div></div>
+      <div class="cd" style="margin-top:9px">Move complex logic into a hub-and-spoke layer using an integration platform. IFS partners with Boomi — pre-built IFS connectors, GUI-based, low-code, and able to act as a master-data hub.</div>
+      <div class="cn" style="margin-top:12px">HUB-AND-SPOKE</div>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:14px"><b>One integrity rule throughout.</b> However data arrives — API, event, file, or replication — it is inserted through business logic. Quality checks and validation are never bypassed.</div>
+  <div class="grid g2" style="margin-top:12px">
+    <div class="card" style="background:var(--s1)">
+      <div class="ct" style="font-size:13px">Data migration, in detail</div>
+      <div class="cd" style="margin-top:6px">Imported data lands in a temporary loading table where it can be supplemented, cleansed, and quality-assured before commit. Field-level mapping controls exactly what transfers — replicate descriptions but not prices, concatenate or split fields, filter by condition.</div>
+    </div>
+    <div class="card" style="background:var(--s1)">
+      <div class="ct" style="font-size:13px">When to reach for an external broker</div>
+      <div class="cd" style="margin-top:6px">Choose iPaaS when integration logic is complex, spans many systems, or needs business-user maintainability. Boomi ships connectors for IFS Cloud and hundreds of other applications, and can synchronise master data across the landscape.</div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>12</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Complete the picture</h4>
+    <p>This slide rounds out integration: event-driven, bulk/replicated, and the external-broker pattern.</p>
+    <h4>Business events</h4>
+    <p>The platform pushes notifications when business things happen — external systems subscribe via Connect. This is how you avoid polling.</p>
+    <h4>Data movement</h4>
+    <p>In-solution migration tools import from any database or flat file through staged loading tables, with cleansing and QA before commit. Field-level mapping is precise — the prices-but-not-descriptions example lands well. The same engine does real-time replication.</p>
+    <h4>External broker</h4>
+    <p>For complex, multi-system integration, move the logic into an iPaaS hub. IFS partners with Boomi — pre-built IFS connectors, low-code, GUI-based, and capable of being the master-data hub.</p>
+    <h4>Close on integrity</h4>
+    <p>Repeat the rule one more time: every inbound path goes through business logic. It is the through-line of the whole topic.</p>
+  </div>
+</section>
+
+<!-- ============ 13 · INTEGRATION DECISION (INTERACTIVE) ============ -->
+<section class="slide" id="s13" data-label="Choosing an integration pattern">
+  <div class="head">
+    <div class="kicker">Topic 01 · Interactive</div>
+    <h2 class="stitle">Choosing the right integration pattern</h2>
+    <p class="lead">Four supported routes, each suited to a different need. Select a requirement to see the recommended pattern and why.</p>
+  </div>
+  <div class="diagram flex1" id="dg-integ" style="margin-top:2px"></div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>13</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Make it a conversation</h4>
+    <p>This is the synthesis of the integration topic. Click each requirement on the left — the matching pattern lights up on the right with the rationale.</p>
+    <h4>Use the room</h4>
+    <p>If the prospect has named a specific integration need — a billing system, a network-inventory platform, a data warehouse — map it live. Ask "what does your CRM integration look like today?" and walk it through the selector.</p>
+    <h4>The takeaway</h4>
+    <p>There is no single right answer — there is a right answer <b>per requirement</b>. A mature landscape uses REST for modern synchronous calls, Connect for message-based and legacy protocols, events for push, and an iPaaS hub when logic gets complex. The architecture supports all four without compromise.</p>
+  </div>
+</section>
+
+<!-- ============ 14 · TOPIC 1 RECAP ============ -->
+<section class="slide" id="s14" data-label="Topic 1 recap">
+  <div class="head">
+    <div class="kicker dim">Topic 01 · Recap</div>
+    <h2 class="stitle">What to carry into Topic 02</h2>
+  </div>
+  <div style="margin-top:14px;display:flex;flex-direction:column;gap:13px">
+    <div class="fitem" style="align-items:center"><span class="recap-num">01</span><div><div class="fi-t" style="font-size:15px">One platform, one logic layer</div><div class="fi-d" style="font-size:12.5px">A layered multi-tier SOA. UI, mobile, and integrations all reach the same business logic — security and validation enforced once.</div></div></div>
+    <div class="fitem" style="align-items:center"><span class="recap-num">02</span><div><div class="fi-t" style="font-size:15px">Containerised middle tier</div><div class="fi-d" style="font-size:12.5px">Docker containers on Kubernetes, routed by a shared ingress proxy into per-environment namespaces. The basis for everything in Topic 2.</div></div></div>
+    <div class="fitem" style="align-items:center"><span class="recap-num">03</span><div><div class="fi-t" style="font-size:15px">Data integrity is structural</div><div class="fi-d" style="font-size:12.5px">Data is reachable only through business logic — never direct table access. Every inbound integration path obeys this rule.</div></div></div>
+    <div class="fitem" style="align-items:center"><span class="recap-num">04</span><div><div class="fi-t" style="font-size:15px">Four integration routes, openly</div><div class="fi-d" style="font-size:12.5px">REST/OData APIs, IFS Connect, business events, and external iPaaS — 100% open, standards-based, chosen deliberately per requirement.</div></div></div>
+  </div>
+  <div class="callout" style="margin-top:22px"><b>Next — Topic 02.</b> We take the containerised middle tier and show how it scales on Kubernetes, how it is secured in depth, and how it is extended without breaking the evergreen update path.</div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>14</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Recap discipline</h4>
+    <p>Four points, no new material. This is a checkpoint — pause, invite questions, let the room reset before Topic 2.</p>
+    <h4>Reinforce the bridge</h4>
+    <p>Point 2 is the deliberate hand-off: the containerised middle tier is the object Topic 2 acts on. Scalability, security, and extensibility all build on the architecture just established.</p>
+    <h4>Read the room</h4>
+    <p>If integration generated a lot of discussion, this is the moment to offer a follow-up technical deep-dive rather than over-running. Keep to the 30-minute budget.</p>
+  </div>
+</section>
+
+<!-- ============ 15 · DIVIDER — TOPIC 2 ============ -->
+<section class="slide" id="s15" data-label="Divider · Topic 2">
+  <div class="aurora"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div>
+  <div class="divwrap">
+    <div class="dnum">TOPIC 02</div>
+    <h2 class="dttl">Scale, secure,<br>and extend</h2>
+    <p class="dlead">How the containerised middle tier scales on Kubernetes, how the platform is secured in depth and independently certified, and how it is extended without breaking the evergreen update path.</p>
+    <div class="dpoints">
+      <div class="dp"><b>›</b> &nbsp;Kubernetes elasticity</div>
+      <div class="dp"><b>›</b> &nbsp;Defence-in-depth security</div>
+      <div class="dp"><b>›</b> &nbsp;ISO 27001 · SOC 1 &amp; 2</div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>15</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Transition</h4>
+    <p>This is the longest and, for most reviewers, the most important topic. Three threads: <b>scalability</b> (the runtime), <b>security</b> (the largest block — posture, certifications, internal controls, secure development), and <b>extensibility</b> (changing the product without losing evergreen updates).</p>
+    <h4>Pace</h4>
+    <p>Security runs slides 19 to 26 — eight slides. Do not rush them; this is where the security team engages. Budget time accordingly.</p>
+  </div>
+</section>
+
+<!-- ============ 16 · KUBERNETES RUNTIME (INTERACTIVE) ============ -->
+<section class="slide" id="s16" data-label="Kubernetes runtime">
+  <div class="head">
+    <div class="kicker">Topic 02 · Interactive</div>
+    <h2 class="stitle">The Kubernetes-based runtime</h2>
+    <p class="lead">The middle tier runs as Linux Docker containers in a Kubernetes cluster. Scaling and high availability are properties of the orchestrator — not bolt-ons.</p>
+  </div>
+  <div class="diagram flex1" id="dg-k8s" style="margin-top:2px"></div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>16</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Drive the diagram</h4>
+    <p>Use the two controls. <b>Add node</b> grows the cluster. <b>Scale replicas</b> increases container copies. Watch replicas distribute across nodes.</p>
+    <h4>Horizontal scale</h4>
+    <p>Two levers. Add node machines to the cluster for more total capacity. Increase the replica count of a container to spread load across them. Both are routine operations — no re-architecture.</p>
+    <h4>High availability by design</h4>
+    <p>This is the key point. When Kubernetes runs more than two replicas of a container, it places them on <b>different nodes</b>. If a node fails, the surviving replicas keep serving and the orchestrator reschedules the lost ones. HA is a property of how the cluster is configured — not a separate product.</p>
+    <h4>Land it</h4>
+    <p>Scalability and resilience are the same mechanism viewed two ways. The next two slides unpack each.</p>
+  </div>
+</section>
+
+<!-- ============ 17 · SCALABILITY MODEL ============ -->
+<section class="slide" id="s17" data-label="Scalability model">
+  <div class="split wide-r">
+    <div class="vcenter">
+      <div class="kicker">Topic 02 · Scale</div>
+      <h2 class="stitle" style="margin-top:11px">Scaling is horizontal and routine</h2>
+      <p class="lead" style="margin-top:12px">Capacity grows by adding identical units — not by rebuilding. The platform scales with the business, in both directions.</p>
+      <div class="flist" style="margin-top:18px">
+        <div class="fitem"><div class="fi-ic">+</div><div><div class="fi-t">Scale out — add nodes</div><div class="fi-d">More node machines join the cluster to lift total capacity.</div></div></div>
+        <div class="fitem"><div class="fi-ic">×</div><div><div class="fi-t">Scale up — add replicas</div><div class="fi-d">More container copies of a service distribute the load.</div></div></div>
+        <div class="fitem"><div class="fi-ic">~</div><div><div class="fi-t">Elastic — match demand</div><div class="fi-d">Resource is added where needed and released when it is not.</div></div></div>
+      </div>
+    </div>
+    <div class="vcenter">
+      <div class="card" style="background:var(--s1);padding:22px">
+        <div class="cn" style="color:var(--v3)">SIZING DIMENSIONS</div>
+        <div class="ct" style="font-size:15px;margin-top:8px">How an environment is sized</div>
+        <div style="margin-top:12px">
+          <div class="kv"><span class="kk">Solution complexity</span><span class="vv">factored</span></div>
+          <div class="kv"><span class="kk">User counts &amp; concurrency</span><span class="vv">measured</span></div>
+          <div class="kv"><span class="kk">Data handling &amp; residency</span><span class="vv">scoped</span></div>
+          <div class="kv"><span class="kk">Availability requirement</span><span class="vv">tiered</span></div>
+          <div class="kv"><span class="kk">Custom &amp; storage needs</span><span class="vv">sized</span></div>
+        </div>
+        <div class="callout" style="margin-top:16px">A <b>concurrency limit</b> is a performance guarantee — the supported number of simultaneously active users, measured hourly. It rightsizes the service and prevents contention.</div>
+      </div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>17</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>The principle</h4>
+    <p>Horizontal scaling means capacity grows by adding identical units — nodes and replicas — not by forklift-upgrading to bigger servers. It scales in both directions, so the service is not over-provisioned.</p>
+    <h4>Sizing</h4>
+    <p>Environments are sized against five dimensions: solution complexity, user counts and concurrency, data handling and residency, availability tier, and custom/storage needs. This is a deliberate, validated design exercise — not guesswork.</p>
+    <h4>Concurrency limit — explain it carefully</h4>
+    <p>It is a <b>performance guarantee</b>, not a hard cap on named users. It is the number of users who can be simultaneously active, measured over an hour. It stabilises resource allocation and keeps the service rightsized. If the prospect has seasonal or shift-pattern peaks, this is where to discuss it.</p>
+  </div>
+</section>
+
+<!-- ============ 18 · HIGH AVAILABILITY ============ -->
+<section class="slide" id="s18" data-label="High availability">
+  <div class="head">
+    <div class="kicker">Topic 02 · Resilience</div>
+    <h2 class="stitle">High availability and resilience</h2>
+    <p class="lead">Resilience is layered — the orchestrator, the Azure platform, and an optional high-availability tier each contribute.</p>
+  </div>
+  <div class="grid g3" style="margin-top:6px">
+    <div class="card">
+      <div class="tag" style="color:var(--v3);border-color:var(--v3)">LAYER 1</div>
+      <div class="ct" style="font-size:14px;margin-top:11px">Orchestrator resilience</div>
+      <div class="cd" style="margin-top:8px">Kubernetes places replicas across nodes. A failed container is rescheduled automatically; a failed node sheds load to its peers. Self-healing is built in.</div>
+    </div>
+    <div class="card">
+      <div class="tag" style="color:var(--teal);border-color:var(--teal)">LAYER 2</div>
+      <div class="ct" style="font-size:14px;margin-top:11px">Azure platform resilience</div>
+      <div class="cd" style="margin-top:8px">Compute, storage, network, and power are redundant within the data centre, with automatic recovery from low-level hardware faults — at both primary and secondary sites.</div>
+    </div>
+    <div class="card">
+      <div class="tag" style="color:var(--blue);border-color:var(--blue)">LAYER 3</div>
+      <div class="ct" style="font-size:14px;margin-top:11px">High Availability service</div>
+      <div class="cd" style="margin-top:8px">An optional add-on for mission-critical operations — deployed across Azure Availability Zones in supported regions, including Australia East (Sydney).</div>
+    </div>
+  </div>
+  <div class="split" style="margin-top:14px;height:auto">
+    <div class="card" style="background:var(--s1)">
+      <div class="ct" style="font-size:13px">Availability Zones</div>
+      <div class="cd" style="margin-top:6px">An Availability Zone is a physically separate facility within a region, with independent power, cooling, and network. The HA service spreads the deployment across zones so a single-facility failure does not take the service down. <b>Australia East (Sydney) supports Availability Zones.</b></div>
+    </div>
+    <div class="card" style="background:var(--s1)">
+      <div class="ct" style="font-size:13px">Outcome-based SLA</div>
+      <div class="cd" style="margin-top:6px">The managed cloud service commits to an <b>application-level</b> availability SLA, financially backed by service credits. The guarantee covers the whole stack working together — not individual components in isolation.</div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>18</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Three layers</h4>
+    <p>Resilience is not one feature — it is three layers stacking. Walk them bottom-up in effect: orchestrator self-healing, Azure hardware redundancy, and the optional HA service.</p>
+    <h4>Availability Zones</h4>
+    <p>Define the term — physically separate facilities within one region, independent power and network. The HA add-on spreads the deployment across zones. Note explicitly that <b>Sydney (Australia East) supports zones</b> — that connects directly to Topic 3.</p>
+    <h4>The SLA distinction — important</h4>
+    <p>The SLA is <b>application-level</b>. Traditional hosting guarantees a server is powered on. IFS guarantees the application is available — the whole stack working together — and backs it with service credits. Architects evaluating hosting contracts should hear this clearly.</p>
+    <h4>Commercial note</h4>
+    <p>The HA service is an Enterprise Premium tier add-on. Flag it as available; defer pricing.</p>
+  </div>
+</section>
+
+<!-- ============ 19 · DEFENCE IN DEPTH (INTERACTIVE) ============ -->
+<section class="slide" id="s19" data-label="Defence in depth">
+  <div class="head">
+    <div class="kicker">Topic 02 · Interactive</div>
+    <h2 class="stitle">Security as defence in depth</h2>
+    <p class="lead">No single control is the security model. Protection is layered from the Azure platform inward to the data — select a layer to inspect its controls.</p>
+  </div>
+  <div class="diagram flex1" id="dg-security" style="margin-top:2px"></div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>19</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Drive the diagram</h4>
+    <p>Click each ring, outer to inner. Each layer lists its specific controls. This slide is the map for the next seven — it shows the security team where everything fits.</p>
+    <h4>The layers</h4>
+    <p><b>Azure platform</b> — physical and infrastructure security, DDoS protection. <b>Network</b> — Web Application Firewall, proxy, ingress/egress control, segregation. <b>Identity</b> — authentication, MFA, SSO. <b>Application</b> — role-based permission sets, segregation of duties. <b>Data</b> — encryption at rest and in transit, single-tenant isolation.</p>
+    <h4>The argument</h4>
+    <p>Defence in depth means an attacker must defeat <b>every</b> layer, and a failure in one is contained by the others. There is no single point of security failure.</p>
+    <h4>Single-tenant</h4>
+    <p>Call out the centre: each customer runs in a fully segregated, single-tenant architecture. No shared database, no noisy-neighbour exposure.</p>
+  </div>
+</section>
+
+<!-- ============ 20 · APPLICATION SECURITY ============ -->
+<section class="slide" id="s20" data-label="Application security">
+  <div class="head">
+    <div class="kicker">Topic 02 · Security</div>
+    <h2 class="stitle">Application security — the permission model</h2>
+    <p class="lead">Access is granted on a strict need-to-know basis. The model is role-based, granular, and auditable — and privileges are never granted to a user directly.</p>
+  </div>
+  <div class="split" style="margin-top:6px;height:auto">
+    <div class="card">
+      <div class="ct" style="font-size:14px">Permission Sets — how RBAC works</div>
+      <div class="cd" style="margin-top:8px">A <b>Permission Set</b> groups related privileges so they can be granted and revoked together. Privileges reach a user <b>only</b> through a Permission Set — never assigned individually. That makes access reviewable: you audit the set, not a scatter of one-off grants.</div>
+      <div style="margin-top:14px;display:flex;align-items:center;gap:10px">
+        <div class="tag">USER</div><span style="color:var(--tx-faint)">→</span>
+        <div class="tag" style="color:var(--v3);border-color:var(--v3)">PERMISSION SET</div><span style="color:var(--tx-faint)">→</span>
+        <div class="tag">PRIVILEGES</div>
+      </div>
+    </div>
+    <div class="card" style="background:var(--s1)">
+      <div class="ct" style="font-size:14px">Data visibility controls</div>
+      <div class="cd" style="margin-top:8px">Beyond function-level access, visibility of <b>data</b> is restricted between parts of the organisation using built-in constructs — <b>Company</b> and <b>Site</b>. This supports data-transfer restrictions, including those arising from GDPR, without custom development.</div>
+      <div class="cd" style="margin-top:10px">Granularity reaches a low level where the most sensitive information requires it.</div>
+    </div>
+  </div>
+  <div class="grid g3" style="margin-top:13px">
+    <div class="card"><div class="ct" style="font-size:13px">Need-to-know default</div><div class="cd" style="margin-top:5px">Users see and do only what their role requires — least privilege as the starting posture.</div></div>
+    <div class="card"><div class="ct" style="font-size:13px">Segregation of duties</div><div class="cd" style="margin-top:5px">Rules prevent one user holding conflicting permissions — examined in detail on slide 25.</div></div>
+    <div class="card"><div class="ct" style="font-size:13px">History logging</div><div class="cd" style="margin-top:5px">Extensive logging traces each action by a logged-in end user, for governance and forensics.</div></div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>20</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>The model</h4>
+    <p>Role-based access control built on Permission Sets. The non-negotiable rule: privileges reach a user <b>only</b> through a Permission Set, never by direct grant. Draw the chain — user, permission set, privileges.</p>
+    <h4>Why that rule matters</h4>
+    <p>It makes access <b>auditable</b>. A reviewer inspects a small number of well-named sets, not thousands of individual grants. It is the difference between an access review that is feasible and one that is not.</p>
+    <h4>Data visibility</h4>
+    <p>Function access is one axis; data visibility is the other. Company and Site constructs partition who sees which data — useful for a multi-entity telco and directly relevant to GDPR data-transfer restrictions.</p>
+    <h4>Granularity</h4>
+    <p>Access can be restricted to a low level of granularity where sensitive data demands it. History logging records every action for forensics. Segregation of duties gets its own slide — flag it and move on.</p>
+  </div>
+</section>
+
+<!-- ============ 21 · IDENTITY & ACCESS ============ -->
+<section class="slide" id="s21" data-label="Identity &amp; access">
+  <div class="head">
+    <div class="kicker">Topic 02 · Security</div>
+    <h2 class="stitle">Identity, authentication, and connectivity</h2>
+    <p class="lead">Authentication integrates with the customer's existing identity estate. Connectivity options range from public internet to fully private circuits.</p>
+  </div>
+  <div class="split" style="margin-top:6px;height:auto">
+    <div class="card">
+      <div class="cn" style="color:var(--v3)">IDENTITY</div>
+      <div class="ct" style="font-size:14px;margin-top:8px">Two authentication models</div>
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+        <div class="card" style="background:var(--s2);padding:12px 14px">
+          <div class="ct" style="font-size:12.5px">IFS integrated IAM</div>
+          <div class="cd" style="margin-top:3px">The built-in identity and access management solution.</div>
+        </div>
+        <div class="card" style="background:var(--s2);padding:12px 14px">
+          <div class="ct" style="font-size:12.5px">OpenID Connect provider</div>
+          <div class="cd" style="margin-top:3px">Federate to Entra ID (Azure AD) or any OIDC-compliant provider — adding SSO, MFA, and Conditional Access from the customer's own estate.</div>
+        </div>
+      </div>
+      <div class="callout" style="margin-top:13px">Most enterprises federate — IFS Cloud becomes one more application behind the existing identity provider and its policies.</div>
+    </div>
+    <div class="card" style="background:var(--s1)">
+      <div class="cn" style="color:var(--v3)">CONNECTIVITY</div>
+      <div class="ct" style="font-size:14px;margin-top:8px">Three connection methods</div>
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
+        <div class="card" style="background:var(--s2);padding:11px 13px"><div style="display:flex;justify-content:space-between"><div class="ct" style="font-size:12.5px">Public internet</div><span class="tag">TLS / HTTPS</span></div><div class="cd" style="margin-top:3px">Encrypted; IP whitelisting strongly recommended.</div></div>
+        <div class="card" style="background:var(--s2);padding:11px 13px"><div style="display:flex;justify-content:space-between"><div class="ct" style="font-size:12.5px">Site-to-site VPN</div><span class="tag">IPsec</span></div><div class="cd" style="margin-top:3px">Encrypted tunnel for hybrid integration scenarios.</div></div>
+        <div class="card" style="background:var(--s2);padding:11px 13px"><div style="display:flex;justify-content:space-between"><div class="ct" style="font-size:12.5px">ExpressRoute</div><span class="tag">PRIVATE MPLS</span></div><div class="cd" style="margin-top:3px">Private circuit — never traverses the public internet.</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>21</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Identity</h4>
+    <p>Two models. The built-in IFS IAM works standalone. But almost every enterprise chooses the second: federate via OpenID Connect to Entra ID or another OIDC provider. IFS Cloud then becomes one more app behind the customer's identity provider — inheriting their SSO, MFA, and Conditional Access policies.</p>
+    <h4>Why that lands</h4>
+    <p>The customer's security team keeps control of identity policy. Joiner-mover-leaver, MFA enforcement, conditional access by location or device — all governed centrally, not duplicated in IFS Cloud.</p>
+    <h4>Connectivity</h4>
+    <p>Three options on a spectrum. Public internet with TLS and IP whitelisting. Site-to-site IPsec VPN for hybrid integration. ExpressRoute for a private MPLS circuit that never touches the public internet. For a telco with their own network assets, ExpressRoute is often the natural fit — let them raise it.</p>
+  </div>
+</section>
+
+<!-- ============ 22 · DATA PROTECTION ============ -->
+<section class="slide" id="s22" data-label="Data protection">
+  <div class="head">
+    <div class="kicker">Topic 02 · Security</div>
+    <h2 class="stitle">Data protection — encrypted end to end</h2>
+    <p class="lead">Encryption is the default state of the data, both in motion and at rest. Keys are managed in a dedicated vault.</p>
+  </div>
+  <div class="split" style="margin-top:6px;height:auto">
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:9px"><span class="dot" style="background:var(--teal)"></span><div class="ct" style="font-size:14px">In transit</div></div>
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
+        <div class="kv"><span class="kk">Transport</span><span class="vv">TLS over HTTPS</span></div>
+        <div class="kv"><span class="kk">Key strength</span><span class="vv">RSA 2048-bit</span></div>
+        <div class="kv"><span class="kk">Forward secrecy</span><span class="vv">Perfect FS</span></div>
+        <div class="kv"><span class="kk">Intra-Azure</span><span class="vv">SMB 3.0 encrypted</span></div>
+      </div>
+      <div class="cd" style="margin-top:11px">All connectivity over the public internet is fully encrypted. TLS provides strong authentication, message privacy, and tamper detection.</div>
+    </div>
+    <div class="card" style="background:var(--s1)">
+      <div style="display:flex;align-items:center;gap:9px"><span class="dot" style="background:var(--v3)"></span><div class="ct" style="font-size:14px">At rest</div></div>
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
+        <div class="kv"><span class="kk">Disk volumes</span><span class="vv">BitLocker full-volume</span></div>
+        <div class="kv"><span class="kk">Azure SQL</span><span class="vv">TDE · AES / 3DES</span></div>
+        <div class="kv"><span class="kk">Key custody</span><span class="vv">Azure Key Vault</span></div>
+        <div class="kv"><span class="kk">Default state</span><span class="vv">Encrypted</span></div>
+      </div>
+      <div class="cd" style="margin-top:11px">Server-side encryption protects operating-system and data disks. Where Azure SQL is used, Transparent Data Encryption encrypts files at the page level.</div>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:13px"><b>Key management.</b> Cryptographic keys and secrets are safeguarded in Azure Key Vault, with access restricted to authorised users and services only — keys are never co-located with the data they protect.</div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>22</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Default, not optional</h4>
+    <p>The framing: encryption is the <b>default state</b> of the data. There is no unencrypted mode to opt out of.</p>
+    <h4>In transit</h4>
+    <p>TLS over HTTPS, RSA 2048-bit keys, Perfect Forward Secrecy so a future key compromise cannot decrypt past sessions. Traffic between Azure VMs is encrypted with SMB 3.0.</p>
+    <h4>At rest</h4>
+    <p>Server-side encryption — BitLocker full-volume on disks; for Azure SQL modules, Transparent Data Encryption at the page level using AES and 3DES.</p>
+    <h4>Keys</h4>
+    <p>The detail security architects look for: keys live in Azure Key Vault, separate from the data, with restricted access. Encryption is only as strong as key custody — and key custody is handled correctly here.</p>
+  </div>
+</section>
+
+<!-- ============ 23 · COMPLIANCE CERTIFICATIONS ============ -->
+<section class="slide" id="s23" data-label="Compliance certifications">
+  <div class="head">
+    <div class="kicker">Topic 02 · Security</div>
+    <h2 class="stitle">Independently certified, annually audited</h2>
+    <p class="lead">Security claims are validated by external accredited auditors — for the IFS Cloud service and, beneath it, the Azure platform.</p>
+  </div>
+  <div class="grid g3" style="margin-top:6px">
+    <div class="card" style="border-top:2px solid var(--v3)">
+      <div class="ct" style="font-size:14px">ISO/IEC 27001</div>
+      <div class="cd" style="margin-top:7px">Information Security Management certification for the IFS Cloud service — the internationally recognised ISMS standard.</div>
+      <div class="cn" style="margin-top:10px;color:var(--v3)">CERTIFIED · 27001:2022</div>
+    </div>
+    <div class="card" style="border-top:2px solid var(--v2)">
+      <div class="ct" style="font-size:14px">SOC 1 Type II</div>
+      <div class="cd" style="margin-top:7px">Controls relevant to financial reporting, independently examined over a period. Certified to SSAE 18 and ISAE 3402.</div>
+      <div class="cn" style="margin-top:10px;color:var(--v3)">UNQUALIFIED REPORT</div>
+    </div>
+    <div class="card" style="border-top:2px solid var(--teal)">
+      <div class="ct" style="font-size:14px">SOC 2 Type II</div>
+      <div class="cd" style="margin-top:7px">Security, availability, and confidentiality controls, examined over a period. Certified to ISAE 3000.</div>
+      <div class="cn" style="margin-top:10px;color:var(--v3)">EXAMINED OVER TIME</div>
+    </div>
+  </div>
+  <div class="split" style="margin-top:13px;height:auto">
+    <div class="card" style="background:var(--s1)">
+      <div class="ct" style="font-size:13px">Annual penetration testing</div>
+      <div class="cd" style="margin-top:6px">An independent third-party specialist runs penetration tests annually, and after substantial change — from the internet, against a production-grade environment, covering infrastructure and application. Findings are CVSS-rated and remediated under agreed plans. Customers may request the report under NDA.</div>
+    </div>
+    <div class="card" style="background:var(--s1)">
+      <div class="ct" style="font-size:13px">The Azure platform beneath</div>
+      <div class="cd" style="margin-top:6px">Azure data centres carry their own certifications — ISO 27001, ISO 27018, SOC 1/2/3, CSA STAR — and region-specific accreditations including <b>Australia IRAP</b>. Two certified layers, audited independently.</div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>23</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>This is the evidence slide</h4>
+    <p>Procurement and security teams want certifications, not assurances. Three headline ones for the IFS Cloud service.</p>
+    <h4>Read them precisely</h4>
+    <p><b>ISO 27001</b> — the ISMS standard, current to the 2022 revision. <b>SOC 1 Type II</b> — financial-reporting controls, an unqualified report, to SSAE 18 / ISAE 3402. <b>SOC 2 Type II</b> — security, availability, confidentiality, to ISAE 3000. Type II is the important word — controls examined <b>over a period</b>, not a point-in-time snapshot.</p>
+    <h4>Penetration testing</h4>
+    <p>Annual, independent, from the internet, infrastructure and application, CVSS-rated. The report is available under NDA — offer it as a concrete next step for their security team.</p>
+    <h4>Two layers</h4>
+    <p>IFS Cloud is certified; Azure beneath it is separately certified — and Azure carries <b>IRAP</b>, the Australian government assessment. That is a strong signal for an Australian deployment and a natural bridge to Topic 3.</p>
+  </div>
+</section>
+
+<!-- ============ 24 · GDPR / DATA PRIVACY ============ -->
+<section class="slide" id="s24" data-label="Data privacy &amp; GDPR">
+  <div class="head">
+    <div class="kicker">Topic 02 · Security</div>
+    <h2 class="stitle">Data privacy across the personal-data lifecycle</h2>
+    <p class="lead">IFS Cloud carries built-in functionality supporting GDPR compliance through every stage of personal-data management — not as an add-on, as part of the application.</p>
+  </div>
+  <div class="grid g3" style="margin-top:6px">
+    <div class="card">
+      <div class="cn" style="color:var(--v3)">01 · COLLECT</div>
+      <div class="ct" style="font-size:13.5px;margin-top:8px">Lawful collection</div>
+      <div class="cd" style="margin-top:6px">Each data subject is identifiable, with one or more defined processing purposes and durations attached.</div>
+    </div>
+    <div class="card">
+      <div class="cn" style="color:var(--v3)">02 · STORE</div>
+      <div class="ct" style="font-size:13.5px;margin-top:8px">Secure storage</div>
+      <div class="cd" style="margin-top:6px">RBAC-enforced, with management of personal-information items, processing purpose, and date-controlled consent. Encrypted at rest.</div>
+    </div>
+    <div class="card">
+      <div class="cn" style="color:var(--v3)">03 · RECALL</div>
+      <div class="ct" style="font-size:13.5px;margin-top:8px">Secure recall &amp; relay</div>
+      <div class="cd" style="margin-top:6px">Built-in reporting outputs what data is held, its purpose, expiry, and legal basis. Encrypted in transit.</div>
+    </div>
+    <div class="card">
+      <div class="cn" style="color:var(--v3)">04 · REMOVE</div>
+      <div class="ct" style="font-size:13.5px;margin-top:8px">Secure maintenance &amp; removal</div>
+      <div class="cd" style="margin-top:6px">The data controller can clean up, remove, or anonymise personal data, and enforce data expiration.</div>
+    </div>
+    <div class="card">
+      <div class="cn" style="color:var(--v3)">05 · GOVERN</div>
+      <div class="ct" style="font-size:13.5px;margin-top:8px">Lawful usage</div>
+      <div class="cd" style="margin-top:6px">A single entry point to access and control the purposes and legal basis for all processing.</div>
+    </div>
+    <div class="card" style="background:var(--s1);display:flex;flex-direction:column;justify-content:center">
+      <div class="callout" style="border-color:var(--teal)"><b>Australian context.</b> The same lifecycle controls — identify, purpose, consent, recall, erasure — map directly onto Australian Privacy Act obligations and the Australian Privacy Principles.</div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>24</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>The lifecycleframing</h4>
+    <p>Privacy is not a feature — it is functionality spanning the whole personal-data lifecycle. Walk the five stages: collect, store, recall, remove, govern.</p>
+    <h4>The detail that matters</h4>
+    <p>Each subject has defined purposes and durations. Consent is date-controlled. There is built-in reporting for subject-access-style requests — what is held, why, expiry, legal basis. The controller can anonymise and enforce expiry. One entry point governs purpose and legal basis.</p>
+    <h4>Make it Australian</h4>
+    <p>GDPR is the reference framework, but the prospect is Australian. The same mechanisms — identification, purpose limitation, consent, access, erasure — satisfy the Australian Privacy Act and the APPs. Telecommunications carriers also sit under sector-specific data-retention obligations; the lifecycle controls support those too. Be accurate: IFS provides the functional capability; compliance certification for a specific regulation remains the customer's responsibility.</p>
+  </div>
+</section>
+
+<!-- ============ 25 · INTERNAL CONTROLS ============ -->
+<section class="slide" id="s25" data-label="Business internal controls">
+  <div class="head">
+    <div class="kicker">Topic 02 · Security</div>
+    <h2 class="stitle">Business internal controls and governance</h2>
+    <p class="lead">Security posture is one half of the picture. The other is governance — the controls that keep the right people doing the right things, and prove it.</p>
+  </div>
+  <div class="split" style="margin-top:6px;height:auto">
+    <div class="card">
+      <div class="ct" style="font-size:14px">Segregation of duties</div>
+      <div class="cd" style="margin-top:8px">SoD rules prevent a single user holding combinations of permissions that conflict — supporting finance policy and data-protection requirements alike. A dedicated <b>SoD analysis tool</b> examines how well duties are separated, surfaces inappropriate access, and identifies which users hold which sensitive functions.</div>
+    </div>
+    <div class="card" style="background:var(--s1)">
+      <div class="ct" style="font-size:14px">Audit and traceability</div>
+      <div class="cd" style="margin-top:8px">Configurable history logging records system activity in sensitive areas — what transactions were performed, in what window, by whom. Logs are protected from normal user access and serve internal governance, audit, and forensic review.</div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:13px;background:var(--s1)">
+    <div class="ct" style="font-size:13px">Governance of IFS's own security organisation</div>
+    <div class="grid g3" style="margin-top:11px;gap:10px">
+      <div><div class="cn" style="color:var(--v3)">BOARD-LEVEL</div><div class="cd" style="margin-top:5px">The Information Security Strategy is approved by the Group Chief Digital &amp; Information Officer on behalf of the Board, and reviewed annually.</div></div>
+      <div><div class="cn" style="color:var(--v3)">INDEPENDENT AUDIT</div><div class="cd" style="margin-top:5px">Compliance is validated by an internal audit function independent of the security function, reporting to the Audit Committee.</div></div>
+      <div><div class="cn" style="color:var(--v3)">ISO 27001 ISMS</div><div class="cd" style="margin-top:5px">The Information Security Management System is built on the ISO 27001 framework, with regional tailoring under common global policy.</div></div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>25</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Two senses of "internal controls"</h4>
+    <p>The user asked for both — and they are genuinely different. Be explicit about which is which.</p>
+    <h4>Controls in the customer's application</h4>
+    <p>Segregation of duties — rules that block conflicting permission combinations, plus a dedicated analysis tool that audits separation and surfaces inappropriate access. History logging gives traceability: who did what, when, in sensitive areas. These are the controls the customer's own auditors and finance team will use.</p>
+    <h4>Controls over IFS as a provider</h4>
+    <p>The lower panel. IFS's security strategy is Board-governed via the Group CDIO and reviewed annually. Crucially, the internal audit function is <b>independent</b> of the security function and reports to the Audit Committee — checker and checked are separated. The ISMS is ISO 27001-based.</p>
+    <h4>Why split it</h4>
+    <p>A rigorous reviewer asks both "can we control our users" and "who controls IFS". This slide answers both.</p>
+  </div>
+</section>
+
+<!-- ============ 26 · SECURE DEVELOPMENT ============ -->
+<section class="slide" id="s26" data-label="Secure development">
+  <div class="head">
+    <div class="kicker">Topic 02 · Security</div>
+    <h2 class="stitle">Secure development and vulnerability management</h2>
+    <p class="lead">Security is built into the product before it ships — and managed continuously after. It is embedded in the development process, not inspected on at the end.</p>
+  </div>
+  <div class="grid g4" style="margin-top:6px">
+    <div class="card"><div class="cn" style="color:var(--v3)">DESIGN</div><div class="ct" style="font-size:13px;margin-top:8px">Product Security Board</div><div class="cd" style="margin-top:5px">An R&amp;D board governs consistently high security assurance across all IFS products.</div></div>
+    <div class="card"><div class="cn" style="color:var(--v3)">BUILD</div><div class="ct" style="font-size:13px;margin-top:8px">SAST &amp; DAST</div><div class="cd" style="margin-top:5px">Static and dynamic application security testing, with OWASP-aligned coverage.</div></div>
+    <div class="card"><div class="cn" style="color:var(--v3)">RELEASE</div><div class="ct" style="font-size:13px;margin-top:8px">Artifact scanning</div><div class="cd" style="margin-top:5px">All artifacts — including container images — are vulnerability-scanned before release.</div></div>
+    <div class="card"><div class="cn" style="color:var(--v3)">OPERATE</div><div class="ct" style="font-size:13px;margin-top:8px">Continuous patching</div><div class="cd" style="margin-top:5px">OS and infrastructure components are patched on a continuous cadence.</div></div>
+  </div>
+  <div class="split" style="margin-top:13px;height:auto">
+    <div class="card" style="background:var(--s1)">
+      <div class="ct" style="font-size:13px">OWASP-aligned testing scope</div>
+      <div class="pill-list" style="margin-top:10px">
+        <span class="tag">Injection</span><span class="tag">Broken access control</span><span class="tag">Broken authentication</span>
+        <span class="tag">XSS</span><span class="tag">XXE</span><span class="tag">Insecure deserialization</span>
+        <span class="tag">Sensitive data exposure</span><span class="tag">Vulnerable components</span><span class="tag">Misconfiguration</span>
+      </div>
+    </div>
+    <div class="card" style="background:var(--s1)">
+      <div class="ct" style="font-size:13px">Vulnerability disclosure to customers</div>
+      <div class="cd" style="margin-top:6px">Identified vulnerabilities are published as Security Bulletins on the IFS Security Portal — each with a CVSS criticality rating, the exploitation conditions, affected versions, and the remediation. For cloud customers, the bulletin also states how the risk is mitigated within the managed service.</div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>26</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>The framing</h4>
+    <p>"Shift left" without the jargon: security is built into development, not inspected on afterwards. Walk the four stages — design, build, release, operate.</p>
+    <h4>The four stages</h4>
+    <p><b>Design</b> — an R&amp;D Product Security Board governs assurance. <b>Build</b> — SAST and DAST, OWASP-aligned. <b>Release</b> — every artifact, container images included, is vulnerability-scanned before it ships. <b>Operate</b> — continuous OS and infrastructure patching.</p>
+    <h4>OWASP scope</h4>
+    <p>The tag cloud is the recognisable OWASP risk set. Do not read it aloud — let the security people scan it; they will recognise it as a complete list.</p>
+    <h4>Disclosure</h4>
+    <p>The mature signal: vulnerabilities are disclosed to customers as CVSS-rated Security Bulletins, and for cloud customers the bulletin states how IFS has already mitigated the risk in the managed service. Transparency plus action.</p>
+  </div>
+</section>
+
+<!-- ============ 27 · EXTENSIBILITY (INTERACTIVE) ============ -->
+<section class="slide" id="s27" data-label="Extensibility &amp; evergreen">
+  <div class="head">
+    <div class="kicker">Topic 02 · Interactive</div>
+    <h2 class="stitle">Extensibility without breaking evergreen</h2>
+    <p class="lead">The platform is adapted in three escalating ways — and a layered architecture keeps customer change separate from the IFS core, so updates still apply cleanly.</p>
+  </div>
+  <div class="diagram flex1" id="dg-extend" style="margin-top:2px"></div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>27</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Drive the diagram</h4>
+    <p>Three tiers of change, left to right — increasing power, increasing responsibility. Click each.</p>
+    <h4>The three ways</h4>
+    <p><b>Configure</b> — designers and tooling for power users: change layouts, add fields and pages, automate processes. No code. <b>Extend on the inside</b> — low-code customisation using the layered architecture to keep custom logic <b>separate</b> from the core. <b>Extend on the outside</b> — build custom clients and integrations, or use PowerApps, Mendix, or Boomi against the open APIs.</p>
+    <h4>The point that wins the architect</h4>
+    <p>The layered architecture. Customisations sit in their own layer, distinct from the IFS core. When a Release Update arrives, the core is replaced underneath the customisations — they are not overwritten. This is what makes "evergreen" real: you can change the product <b>and</b> still take continuous updates. The old ERP trade-off — customise or stay current — does not apply.</p>
+    <h4>Evergreen cadence</h4>
+    <p>Bi-annual Release Updates, monthly Service Updates, pulled into the customer's Build Place, tested, then deployed by the customer. No re-implementation projects.</p>
+  </div>
+</section>
+
+<!-- ============ 28 · TOPIC 2 RECAP ============ -->
+<section class="slide" id="s28" data-label="Topic 2 recap">
+  <div class="head">
+    <div class="kicker dim">Topic 02 · Recap</div>
+    <h2 class="stitle">What to carry into Topic 03</h2>
+  </div>
+  <div style="margin-top:14px;display:flex;flex-direction:column;gap:13px">
+    <div class="fitem" style="align-items:center"><span class="recap-num">01</span><div><div class="fi-t" style="font-size:15px">Scale and resilience are the same mechanism</div><div class="fi-d" style="font-size:12.5px">Kubernetes scales horizontally by node and replica — and the same replica distribution delivers self-healing high availability.</div></div></div>
+    <div class="fitem" style="align-items:center"><span class="recap-num">02</span><div><div class="fi-t" style="font-size:15px">Security is layered and independently certified</div><div class="fi-d" style="font-size:12.5px">Defence in depth from Azure platform to data, validated by ISO 27001, SOC 1 Type II, SOC 2 Type II, and annual penetration testing.</div></div></div>
+    <div class="fitem" style="align-items:center"><span class="recap-num">03</span><div><div class="fi-t" style="font-size:15px">Controls cover both the application and the provider</div><div class="fi-d" style="font-size:12.5px">Segregation of duties and audit logging inside the product; Board-governed, independently audited security governance over IFS itself.</div></div></div>
+    <div class="fitem" style="align-items:center"><span class="recap-num">04</span><div><div class="fi-t" style="font-size:15px">Extensible and still evergreen</div><div class="fi-d" style="font-size:12.5px">Configure, extend inside, extend outside — the layered architecture keeps customer change separate so continuous updates still apply.</div></div></div>
+  </div>
+  <div class="callout" style="margin-top:22px"><b>Next — Topic 03.</b> We ground all of this in one deployment: the IFS-managed cloud service, hosted on Azure with primary residency in Sydney and disaster recovery in Melbourne.</div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>28</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Checkpoint</h4>
+    <p>Four points, no new material. This was the longest topic — pause, take the security team's questions here rather than carrying them into Topic 3.</p>
+    <h4>The bridge</h4>
+    <p>Everything so far has been platform-general. Topic 3 makes it concrete and Australian: the same architecture, deployed on Azure, Sydney primary and Melbourne DR. The certifications and residency-of-choice threads converge there.</p>
+  </div>
+</section>
+
+<!-- ============ 29 · DIVIDER — TOPIC 3 ============ -->
+<section class="slide" id="s29" data-label="Divider · Topic 3">
+  <div class="aurora"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div>
+  <div class="divwrap">
+    <div class="dnum">TOPIC 03</div>
+    <h2 class="dttl">Deployment and<br>hosting in Australia</h2>
+    <p class="dlead">The same architecture, deployed as a managed service on Microsoft Azure — primary hosting in Sydney, disaster recovery in Melbourne, data resident in Australia.</p>
+    <div class="dpoints">
+      <div class="dp"><b>›</b> &nbsp;Sydney primary · Australia East</div>
+      <div class="dp"><b>›</b> &nbsp;Melbourne DR · Australia Southeast</div>
+      <div class="dp"><b>›</b> &nbsp;IRAP-accredited Azure</div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>29</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Transition</h4>
+    <p>The final topic makes everything concrete and local. Up to now the deck has been platform-general — Topic 3 is the specific deployment this prospect would actually run.</p>
+    <h4>The three anchors</h4>
+    <p>Primary hosting in <b>Sydney</b> — the Azure Australia East region. Disaster recovery in <b>Melbourne</b> — Azure Australia Southeast. Both sit on Azure infrastructure that holds Australian <b>IRAP</b> assessment. Data at rest stays in Australia.</p>
+  </div>
+</section>
+
+<!-- ============ 30 · DEPLOYMENT MODELS ============ -->
+<section class="slide" id="s30" data-label="Deployment models">
+  <div class="head">
+    <div class="kicker">Topic 03 · Deployment</div>
+    <h2 class="stitle">Two deployment models, three service tiers</h2>
+    <p class="lead">Customers choose who operates the platform. The recommended path is the IFS-managed cloud service — and the model can be changed later.</p>
+  </div>
+  <div class="split" style="margin-top:6px;height:auto">
+    <div class="card" style="border-left:2px solid var(--v2)">
+      <div class="tag" style="color:var(--v3);border-color:var(--v3)">RECOMMENDED</div>
+      <div class="ct" style="font-size:15px;margin-top:10px">Cloud Use Place — IFS managed</div>
+      <div class="cd" style="margin-top:7px">IFS provisions the cloud platform and infrastructure, and monitors and technically manages the environments <b>24×7×365</b>. The customer gets a financially backed availability SLA and retains administrative control of the solution.</div>
+    </div>
+    <div class="card">
+      <div class="tag">ALTERNATIVE</div>
+      <div class="ct" style="font-size:15px;margin-top:10px">Remote Use Place — customer operated</div>
+      <div class="cd" style="margin-top:7px">The solution is managed in the IFS cloud, but production and test environments are deployed in a location of the customer's choosing, operated by the customer on supported platform software.</div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:13px;background:var(--s1)">
+    <div class="ct" style="font-size:13px">Service tiers — Industrial Cloud Services</div>
+    <div class="grid g3" style="margin-top:11px;gap:10px">
+      <div><div class="cn" style="color:var(--v3)">ESSENTIALS</div><div class="cd" style="margin-top:5px">A streamlined, cost-effective entry tier. One production and one or two non-production environments.</div></div>
+      <div><div class="cn" style="color:var(--v3)">ENTERPRISE</div><div class="cd" style="margin-top:5px">The core offering — the standard balance of scalability, performance, and compliance for most businesses.</div></div>
+      <div><div class="cn" style="color:var(--v3)">ENTERPRISE PREMIUM</div><div class="cd" style="margin-top:5px">For complex, mission-critical needs. Unlocks add-ons including High Availability and data-sovereignty options.</div></div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>30</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>The choice</h4>
+    <p>First, who operates it. <b>Cloud Use Place</b> — IFS-managed — is the recommended path and what the rest of this topic assumes. <b>Remote Use Place</b> exists for customers with a reason to host environments themselves. Importantly, the model is not a one-way door — customers can move between models later.</p>
+    <h4>Service tiers</h4>
+    <p>Within the managed service, three tiers. Essentials for a lean entry point. Enterprise as the standard. Enterprise Premium for mission-critical needs — and this is the tier that unlocks the <b>High Availability</b> add-on and the data-sovereignty options. If the prospect needs HA in Sydney across Availability Zones, that is an Enterprise Premium conversation.</p>
+    <h4>Keep it technical</h4>
+    <p>Name the tiers, do not price them — that is a separate commercial discussion.</p>
+  </div>
+</section>
+
+<!-- ============ 31 · SHARED RESPONSIBILITY (INTERACTIVE) ============ -->
+<section class="slide" id="s31" data-label="Shared responsibility">
+  <div class="head">
+    <div class="kicker">Topic 03 · Interactive</div>
+    <h2 class="stitle">The shared responsibility model</h2>
+    <p class="lead">In the managed cloud service, IFS operates the entire technology stack. The customer owns the solution and its data. Select a layer to see who is accountable.</p>
+  </div>
+  <div class="diagram flex1" id="dg-shared" style="margin-top:2px"></div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>31</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Drive the diagram</h4>
+    <p>Click each layer of the stack. It colours by owner — IFS or customer — and shows the responsibility.</p>
+    <h4>What IFS operates</h4>
+    <p>Everything from the data centre up to and including the IFS software: compute, operating system, database, middleware, the IFS Cloud application, monitoring, patching, backup. The customer does not need specialist IFS infrastructure staff — that demand moves to IFS.</p>
+    <h4>What the customer owns</h4>
+    <p>The solution itself: their data, their users and permissions, their configuration and customisations, and their end-user devices and network. Application-level access is customer-managed.</p>
+    <h4>The line that matters</h4>
+    <p>Be precise about the boundary — it is where most procurement disputes start. Infrastructure and platform availability is IFS. Solution content and access governance is the customer. The SLA applies to what IFS controls: application availability.</p>
+  </div>
+</section>
+
+<!-- ============ 32 · AUSTRALIAN HOSTING MAP (INTERACTIVE) ============ -->
+<section class="slide" id="s32" data-label="Australian hosting topology">
+  <div class="head">
+    <div class="kicker">Topic 03 · Interactive</div>
+    <h2 class="stitle">Australian hosting topology</h2>
+    <p class="lead">Primary hosting in Sydney, disaster recovery in Melbourne — a geographically separated pair, both within Australian borders. Hover the regions and the link.</p>
+  </div>
+  <div class="diagram flex1" id="dg-map" style="margin-top:2px"></div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>32</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>The headline slide of Topic 3</h4>
+    <p>This is the picture the prospect asked for. Two Azure regions, both onshore.</p>
+    <h4>Primary — Sydney</h4>
+    <p>Azure <b>Australia East</b>, in New South Wales. This hosts production and the day-to-day non-production environments. Australia East supports Availability Zones — so the High Availability add-on, if taken, operates here.</p>
+    <h4>Disaster recovery — Melbourne</h4>
+    <p>Azure <b>Australia Southeast</b>, in Victoria. This is the geographically separated secondary site that holds backup and recovery storage. The separation between Sydney and Melbourne is what protects against a region-level event such as a natural disaster.</p>
+    <h4>The link</h4>
+    <p>Hover the connector — backups replicate from Sydney to Melbourne as geo-redundant storage. Both ends are inside Australia. Data at rest does not leave the country.</p>
+    <h4>Honesty point</h4>
+    <p>If asked: data <b>at rest</b> is in Australia. Traffic in transit over the public internet can route through other geographies, and IFS operates with personnel in several countries. Do not over-claim — the residency guarantee is about data at rest.</p>
+  </div>
+</section>
+
+<!-- ============ 33 · SYDNEY PRODUCTION ARCH (INTERACTIVE) ============ -->
+<section class="slide" id="s33" data-label="Sydney production architecture">
+  <div class="head">
+    <div class="kicker">Topic 03 · Interactive</div>
+    <h2 class="stitle">Inside the Sydney primary region</h2>
+    <p class="lead">A single-tenant Azure subscription, with each environment built across a DMZ, application, and database tier. Click a tier to inspect it.</p>
+  </div>
+  <div class="diagram flex1" id="dg-syd" style="margin-top:2px"></div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>33</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Drive the diagram</h4>
+    <p>This zooms into Sydney. Click the DMZ, application, and database tiers; note the environment separation.</p>
+    <h4>Single-tenant</h4>
+    <p>The most important word on the slide. The deployment is a <b>single-tenant</b> Azure subscription dedicated to this customer. No shared database, no co-mingled data, no noisy-neighbour risk. Each customer is fully segregated.</p>
+    <h4>Three-tier per environment</h4>
+    <p>Each environment is built across a DMZ tier (the secure communications gateway), an application tier (the containerised middle tier), and a database tier. Production is held physically separate from test and configuration environments — changes are validated in a safe environment before they reach production.</p>
+    <h4>Connectivity</h4>
+    <p>The secure gateway is where the connectivity choices from Topic 2 — public internet with whitelisting, VPN, ExpressRoute — actually land.</p>
+  </div>
+</section>
+
+<!-- ============ 34 · DISASTER RECOVERY ============ -->
+<section class="slide" id="s34" data-label="Disaster recovery">
+  <div class="head">
+    <div class="kicker">Topic 03 · Resilience</div>
+    <h2 class="stitle">Disaster recovery — Sydney to Melbourne</h2>
+    <p class="lead">Backup and recovery use the physical separation of the two regions. In a region-level disaster, the service is recovered to an alternative Azure region with IFS assistance.</p>
+  </div>
+  <div class="grid g4" style="margin-top:6px">
+    <div class="stat"><div class="sbar" style="background:var(--v2)"></div><div class="sv">14<span style="font-size:18px">d</span></div><div class="sl">Backup retention</div><div class="sd">Standard retention period for operational backups.</div></div>
+    <div class="stat"><div class="sbar" style="background:var(--v3)"></div><div class="sv">GRS</div><div class="sl">Geo-redundant storage</div><div class="sd">Backups replicated to the geographically separate region.</div></div>
+    <div class="stat"><div class="sbar" style="background:var(--teal)"></div><div class="sv">Multi</div><div class="sl">Backup levels</div><div class="sd">Full, cumulative, and differential, plus transaction logs.</div></div>
+    <div class="stat"><div class="sbar" style="background:var(--blue)"></div><div class="sv">Tested</div><div class="sl">DR plans</div><div class="sd">Recovery procedures tested periodically for effectiveness.</div></div>
+  </div>
+  <div class="split" style="margin-top:14px;height:auto">
+    <div class="card" style="background:var(--s1)">
+      <div class="ct" style="font-size:13px">RPO and RTO</div>
+      <div class="cd" style="margin-top:6px">Recovery Point and Recovery Time Objectives are defined in the IFS Support Policy and apply specifically in a disaster scenario. Transaction-log backups allow point-in-time roll-back; the Essentials tier carries a defined RPO with best-effort RTO.</div>
+    </div>
+    <div class="card" style="background:var(--s1)">
+      <div class="ct" style="font-size:13px">What "disaster" means here</div>
+      <div class="cd" style="margin-top:6px">Most restoration is partial — a subset of the system. True DR covers the rare case of an entire Azure region becoming unavailable. Recovery then re-establishes the service in an alternative region, with customer connectivity reconfigured with IFS assistance.</div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>34</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Be precise here</h4>
+    <p>DR is where vague claims get caught. Stick to what is documented.</p>
+    <h4>The mechanics</h4>
+    <p>Backups: 14-day standard retention, multi-level — full, cumulative, differential, plus transaction logs for point-in-time roll-back. Backup storage is geo-redundant — replicated from Sydney to the separate Melbourne region. DR plans are tested periodically.</p>
+    <h4>RPO / RTO</h4>
+    <p>State plainly that specific RPO and RTO figures live in the IFS Support Policy and depend on the service tier — do not invent numbers on the slide. Offer to walk the prospect's team through the Support Policy figures against their specific tier as a follow-up.</p>
+    <h4>Scope of "disaster"</h4>
+    <p>Most recoveries are partial. Full DR addresses the rare loss of an entire region. Also be clear: broader business-continuity beyond IFS Cloud availability — the customer's own systems, networks, processes — remains the customer's responsibility.</p>
+  </div>
+</section>
+
+<!-- ============ 35 · DATA RESIDENCY & SOVEREIGNTY ============ -->
+<section class="slide" id="s35" data-label="Data residency &amp; sovereignty">
+  <div class="head">
+    <div class="kicker">Topic 03 · Sovereignty</div>
+    <h2 class="stitle">Data residency and sovereignty</h2>
+    <p class="lead">Choosing a primary geography fixes where data is stored at rest. For this deployment, that geography is Australia.</p>
+  </div>
+  <div class="split" style="margin-top:6px;height:auto">
+    <div class="card">
+      <div class="ct" style="font-size:14px">What residency guarantees</div>
+      <div style="margin-top:11px;display:flex;flex-direction:column;gap:8px">
+        <div class="kv"><span class="kk">Primary region</span><span class="vv">Sydney · Australia East</span></div>
+        <div class="kv"><span class="kk">Secondary region</span><span class="vv">Melbourne · Australia SE</span></div>
+        <div class="kv"><span class="kk">Data at rest</span><span class="vv">Within Australia</span></div>
+        <div class="kv"><span class="kk">Backup storage</span><span class="vv">Within Australia</span></div>
+      </div>
+      <div class="cd" style="margin-top:11px">The selected primary geography determines the physical location of data storage. Both the primary and the geo-redundant backup region sit inside Australian borders.</div>
+    </div>
+    <div class="card" style="background:var(--s1)">
+      <div class="ct" style="font-size:14px">Stated honestly</div>
+      <div class="cd" style="margin-top:8px">Data <b>at rest</b> is stored in Australia. Two caveats stated openly: traffic in transit over the public internet can route through other geographies, and IFS operates its global cloud service using personnel and tooling in several countries.</div>
+      <div class="cd" style="margin-top:10px">For the strictest sovereignty needs elsewhere, IFS offers comprehensive restricted-access services — <b>EURA</b> for Europe and <b>ITAR</b> for US defence — going beyond residency to controlled hosting, infrastructure, and support.</div>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:13px"><b>The underlying assurance.</b> The Azure regions hosting this deployment carry Australian <b>IRAP</b> assessment — the Information Security Registered Assessors Program used by Australian government and regulated industry to evaluate cloud security.</div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>35</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>The sovereignty question</h4>
+    <p>For an Australian telco, data sovereignty is a board-level and often a regulatory question. Answer it precisely — credibility depends on not over-claiming.</p>
+    <h4>What is guaranteed</h4>
+    <p>Selecting Australia as the primary geography fixes data storage at rest in Australia — and the geo-redundant backup region, Melbourne, is also in Australia. Data at rest does not leave the country.</p>
+    <h4>The honest caveats</h4>
+    <p>State them yourself before the security team does. Data in transit over the public internet can route through other geographies. IFS runs a global service with staff in multiple countries. Residency is about data at rest — say that clearly. The credibility you gain by being precise outweighs a cleaner-sounding overclaim.</p>
+    <h4>IRAP</h4>
+    <p>The strong proof point — the Azure regions hold IRAP assessment, the standard the Australian government itself uses. EURA and ITAR show IFS can go further for the strictest regimes; they are not needed for a standard Australian deployment.</p>
+  </div>
+</section>
+
+<!-- ============ 36 · ENVIRONMENT LANDSCAPE ============ -->
+<section class="slide" id="s36" data-label="Environment landscape">
+  <div class="head">
+    <div class="kicker">Topic 03 · Environments</div>
+    <h2 class="stitle">The environment landscape</h2>
+    <p class="lead">A managed deployment includes production and supporting non-production environments — separated, so change is validated safely before it reaches live operations.</p>
+  </div>
+  <div class="grid g3" style="margin-top:6px">
+    <div class="card" style="border-top:2px solid var(--v2)">
+      <div class="cn" style="color:var(--v3)">PRD</div>
+      <div class="ct" style="font-size:13.5px;margin-top:8px">Production</div>
+      <div class="cd" style="margin-top:5px">The live system, covered by the application-availability SLA. Held physically separate from all other environments.</div>
+    </div>
+    <div class="card" style="border-top:2px solid var(--v3)">
+      <div class="cn" style="color:var(--v3)">UAT · CFG</div>
+      <div class="ct" style="font-size:13.5px;margin-top:8px">Standard non-production</div>
+      <div class="cd" style="margin-top:5px">User-acceptance testing and configuration environments, included as standard to support the solution lifecycle.</div>
+    </div>
+    <div class="card" style="border-top:2px solid var(--teal)">
+      <div class="cn" style="color:var(--v3)">PSN</div>
+      <div class="ct" style="font-size:13.5px;margin-top:8px">Production-sized non-prod</div>
+      <div class="cd" style="margin-top:5px">An optional pre-production environment that mirrors production for full-workload and performance testing.</div>
+    </div>
+  </div>
+  <div class="split" style="margin-top:13px;height:auto">
+    <div class="card" style="background:var(--s1)">
+      <div class="ct" style="font-size:13px">Additional non-production environments</div>
+      <div class="pill-list" style="margin-top:10px">
+        <span class="tag">ACC</span><span class="tag">AST</span><span class="tag">CST</span>
+        <span class="tag">STG</span><span class="tag">TRN</span><span class="tag">TST</span>
+      </div>
+      <div class="cd" style="margin-top:10px">Further non-production environments can be added to the landscape — acceptance, solution test, staging, training, and more — sized to the customer's lifecycle needs.</div>
+    </div>
+    <div class="card" style="background:var(--s1)">
+      <div class="ct" style="font-size:13px">Build Place and Use Place</div>
+      <div class="cd" style="margin-top:6px">Tailoring happens in the cloud <b>Build Place</b>; tested deliveries are deployed to the persistent <b>Use Place</b> environments that hold customer data. The Application Lifecycle Experience portal governs access and promotion between them.</div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>36</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Why architects care</h4>
+    <p>The environment landscape is how safe change happens. A reviewer wants to see proper separation of production from everything else.</p>
+    <h4>The standard set</h4>
+    <p>Production under the SLA, plus UAT and configuration environments as standard. The optional PSN — production-sized non-production — is the one to highlight: it mirrors production for genuine full-workload and performance testing before go-live or before a major change.</p>
+    <h4>Additional environments</h4>
+    <p>The tag set — acceptance, solution test, staging, training, test — shows the landscape extends to match a real lifecycle. Customers add what their process needs.</p>
+    <h4>Build Place / Use Place</h4>
+    <p>One vocabulary point: tailoring is done in the Build Place; tested deliveries are promoted to the Use Place environments that hold real data. The ALE portal governs that promotion — connecting back to the customer-triggered delivery model from Topic 1.</p>
+  </div>
+</section>
+
+<!-- ============ 37 · OPERATIONS ============ -->
+<section class="slide" id="s37" data-label="Operations">
+  <div class="head">
+    <div class="kicker">Topic 03 · Operations</div>
+    <h2 class="stitle">How the service is run, every day</h2>
+    <p class="lead">The managed service is monitored and operated around the clock — the design, implementation, and 24×7 management of the technology stack sit with IFS.</p>
+  </div>
+  <div class="grid g3" style="margin-top:6px">
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:9px"><span class="dot" style="background:var(--v3)"></span><div class="ct" style="font-size:14px">Monitoring</div></div>
+      <div class="cd" style="margin-top:8px">Azure Monitor at the infrastructure layer, supplemented by IFS-owned tooling for platform, application, and connectivity health. Alerts feed the IFS incident-management process.</div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:9px"><span class="dot" style="background:var(--teal)"></span><div class="ct" style="font-size:14px">Backup &amp; recovery</div></div>
+      <div class="cd" style="margin-top:8px">Multi-level, monitored backups with geo-redundant storage. Recovery processes are tested regularly to confirm a service can be restored after a major failure.</div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:9px"><span class="dot" style="background:var(--blue)"></span><div class="ct" style="font-size:14px">Support</div></div>
+      <div class="cd" style="margin-top:8px">The IFS Service Center is the single point of entry for product-related services, with 24×7 support from cloud specialists and direct access to IFS R&amp;D.</div>
+    </div>
+  </div>
+  <div class="split" style="margin-top:13px;height:auto">
+    <div class="card" style="background:var(--s1)">
+      <div class="ct" style="font-size:13px">Outcome-based, not resource-based</div>
+      <div class="cd" style="margin-top:6px">IFS provides solution <b>availability</b> — not a fixed server configuration. The application-level SLA covers all critical components of the stack working together, backed by service credits if breached. This is fundamentally different from traditional hosting.</div>
+    </div>
+    <div class="card" style="background:var(--s1)">
+      <div class="ct" style="font-size:13px">Division of responsibilities</div>
+      <div class="cd" style="margin-top:6px">Roles across Build Place, Use Place, and lifecycle updates are formally defined in the IFS Cloud Services RASCI model — Responsible, Accountable, Supported, Consulted, Informed — so accountability is never ambiguous.</div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>37</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>The operational reality</h4>
+    <p>This slide answers "what is it like to actually run this". Three pillars: monitoring, backup and recovery, support.</p>
+    <h4>Monitoring and support</h4>
+    <p>Azure Monitor plus IFS-owned tooling across platform, application, and connectivity; alerts feed a formal incident-management process. Support runs through the IFS Service Center — 24×7, cloud specialists, with direct access to R&amp;D when needed.</p>
+    <h4>Outcome-based — the differentiator</h4>
+    <p>Repeat the SLA point from Topic 2 in its operational form. IFS sells <b>availability</b>, not servers. The SLA covers the whole stack working together and is backed by service credits. Traditional hosting gives you a powered-on box and wishes you luck.</p>
+    <h4>RASCI</h4>
+    <p>For an architect worried about accountability gaps, the RASCI model means every task across Build Place, Use Place, and updates has a named owner. Offer it as a document for their team to review.</p>
+  </div>
+</section>
+
+<!-- ============ 38 · TOPIC 3 RECAP ============ -->
+<section class="slide" id="s38" data-label="Topic 3 recap">
+  <div class="head">
+    <div class="kicker dim">Topic 03 · Recap</div>
+    <h2 class="stitle">Deployment in Australia — the essentials</h2>
+  </div>
+  <div style="margin-top:14px;display:flex;flex-direction:column;gap:13px">
+    <div class="fitem" style="align-items:center"><span class="recap-num">01</span><div><div class="fi-t" style="font-size:15px">IFS-managed, single-tenant, on Azure</div><div class="fi-d" style="font-size:12.5px">A dedicated single-tenant subscription, operated 24×7×365 by IFS, with an application-level availability SLA backed by service credits.</div></div></div>
+    <div class="fitem" style="align-items:center"><span class="recap-num">02</span><div><div class="fi-t" style="font-size:15px">Sydney primary, Melbourne disaster recovery</div><div class="fi-d" style="font-size:12.5px">Production in Azure Australia East; geo-redundant backup and recovery in Azure Australia Southeast — a separated pair within Australia.</div></div></div>
+    <div class="fitem" style="align-items:center"><span class="recap-num">03</span><div><div class="fi-t" style="font-size:15px">Data resident in Australia, assured by IRAP</div><div class="fi-d" style="font-size:12.5px">Data at rest — including backups — stays within Australian borders, on Azure infrastructure carrying Australian IRAP assessment.</div></div></div>
+    <div class="fitem" style="align-items:center"><span class="recap-num">04</span><div><div class="fi-t" style="font-size:15px">Clear responsibilities, safe change</div><div class="fi-d" style="font-size:12.5px">A formal shared-responsibility and RASCI model, with separated environments so change is validated before it reaches production.</div></div></div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>38</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Final recap</h4>
+    <p>Four points. This closes the topic content — the next two slides are the whole-deck close.</p>
+    <h4>Reinforce the prospect-specific facts</h4>
+    <p>Sydney primary, Melbourne DR, data onshore, IRAP. These are the four facts the prospect explicitly wanted — make sure they are stated cleanly one last time before Q&amp;A.</p>
+  </div>
+</section>
+
+<!-- ============ 39 · SUMMARY ============ -->
+<section class="slide" id="s39" data-label="Summary">
+  <div class="aurora"><i class="a1" style="opacity:.35"></i><i class="a3" style="opacity:.22"></i></div>
+  <div class="head" style="position:relative;z-index:2">
+    <div class="kicker">Closing</div>
+    <h2 class="stitle">Why this architecture holds up</h2>
+    <p class="lead">Three topics, one consistent answer — IFS Cloud is a platform an enterprise architecture function can stand behind.</p>
+  </div>
+  <div class="grid g3" style="margin-top:8px;position:relative;z-index:2">
+    <div class="card" style="background:rgba(16,16,17,.8)">
+      <div class="cn" style="color:var(--v3)">IT SCALES</div>
+      <div class="cd" style="margin-top:8px;font-size:12.5px">A layered, containerised architecture on Kubernetes. Capacity grows by adding identical units; resilience is a property of the orchestrator, not a bolt-on.</div>
+    </div>
+    <div class="card" style="background:rgba(16,16,17,.8)">
+      <div class="cn" style="color:var(--v3)">IT IS SECURE</div>
+      <div class="cd" style="margin-top:8px;font-size:12.5px">Defence in depth, single-tenant isolation, encryption by default — independently certified to ISO 27001, SOC 1, and SOC 2, and annually penetration-tested.</div>
+    </div>
+    <div class="card" style="background:rgba(16,16,17,.8)">
+      <div class="cn" style="color:var(--v3)">IT IS SOVEREIGN</div>
+      <div class="cd" style="margin-top:8px;font-size:12.5px">Deployed on Azure with primary residency in Sydney and disaster recovery in Melbourne — data at rest within Australia, on IRAP-assessed infrastructure.</div>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:18px;position:relative;z-index:2;font-size:14px"><b>And it stays current.</b> Open APIs and a layered extensibility model mean the platform can be integrated and tailored — while evergreen Release and Service Updates keep it modern without re-implementation. You are not choosing today's architecture; you are choosing a platform that keeps moving.</div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>39</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Bring it home</h4>
+    <p>Return to the opening thesis and show it has been earned. Scales, secure, sovereign — each now backed by the detail the audience just saw.</p>
+    <h4>Deliver the three</h4>
+    <p><b>Scales</b> — layered, containerised, Kubernetes; resilience built in. <b>Secure</b> — defence in depth, single-tenant, encrypted, independently certified. <b>Sovereign</b> — Sydney and Melbourne, data onshore, IRAP.</p>
+    <h4>The closing idea</h4>
+    <p>The evergreen point is the one to end on. Most architecture decisions age. This one is designed not to — open to integrate, layered to extend, continuously updated. Frame the decision as choosing a platform that keeps moving, not a snapshot.</p>
+  </div>
+</section>
+
+<!-- ============ 40 · NEXT STEPS & Q&A ============ -->
+<section class="slide" id="s40" data-label="Next steps &amp; Q&amp;A">
+  <div class="aurora"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div>
+  <div class="cover">
+    <div class="kicker">Closing &nbsp;·&nbsp; discussion</div>
+    <h1 class="ttl" style="font-size:54px">Next steps, and your <span class="accent">questions</span>.</h1>
+    <div class="grid g3" style="margin-top:34px;position:relative;z-index:2">
+      <div class="card" style="background:rgba(16,16,17,.82)">
+        <div class="cn" style="color:var(--v3)">01</div>
+        <div class="ct" style="font-size:13.5px;margin-top:7px">Architecture deep-dive</div>
+        <div class="cd" style="margin-top:5px;font-size:12px">A working session with your architects on integration patterns and the target landscape.</div>
+      </div>
+      <div class="card" style="background:rgba(16,16,17,.82)">
+        <div class="cn" style="color:var(--v3)">02</div>
+        <div class="ct" style="font-size:13.5px;margin-top:7px">Security review pack</div>
+        <div class="cd" style="margin-top:5px;font-size:12px">Certifications, the latest penetration-test report under NDA, and the ISMS documentation for your security team.</div>
+      </div>
+      <div class="card" style="background:rgba(16,16,17,.82)">
+        <div class="cn" style="color:var(--v3)">03</div>
+        <div class="ct" style="font-size:13.5px;margin-top:7px">Deployment sizing</div>
+        <div class="cd" style="margin-top:5px;font-size:12px">A sizing and residency workshop for the Sydney-primary, Melbourne-DR configuration.</div>
+      </div>
+    </div>
+  </div>
+  <div class="logo"><span class="mark">IFS</span><span class="sub">Cloud Architecture</span></div>
+  <div class="foot"><span class="pg"><b>40</b> / 40</span><div class="fr"><span>Confidential</span><span>IFS 2026</span></div></div>
+  <div class="notes-data">
+    <h4>Close and open up</h4>
+    <p>Land three concrete next steps, then move to questions — do not let the session end on a slide.</p>
+    <h4>The three offers</h4>
+    <p>An architecture deep-dive with their architects; a security review pack — including the penetration-test report under NDA, which is a strong, concrete gesture; and a sizing and residency workshop for the Sydney/Melbourne configuration. Each gives the prospect a low-commitment way forward.</p>
+    <h4>Q&amp;A posture</h4>
+    <p>Take questions across all three topics. For anything requiring exact figures — RPO/RTO, SLA percentages, pricing — commit to a written follow-up rather than guessing. Precision built credibility through the whole deck; do not lose it in the last five minutes.</p>
+    <h4>Leave-behind</h4>
+    <p>Confirm the prospect receives this deck. The interactive diagrams and speaker notes make it a usable reference for stakeholders who were not in the room.</p>
+  </div>
+</section>
+
+<!-- SLIDES_INSERT -->
+</div></div>
+
+<div id="hintbar"><kbd>←</kbd> <kbd>→</kbd> navigate &nbsp;·&nbsp; <kbd>N</kbd> notes &nbsp;·&nbsp; <kbd>?</kbd> help</div>
+<div id="nav">
+  <button class="navbtn" id="bPrev" title="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"></path></svg></button>
+  <span id="cnt"><b>02</b> / 40</span>
+  <button class="navbtn" id="bNext" title="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"></path></svg></button>
+  <button class="navbtn" id="bNotes" title="Speaker notes (N)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M4 12h16M4 19h10"></path></svg></button>
+</div>
+
+<div id="notes" class="">
+  <div class="nhead"><span class="nt">Speaker notes</span><span class="nx" id="nxLabel">Agenda  ·  02/40</span></div>
+  <div class="nbody" id="nBody">
+    <h4>Frame the ninety minutes</h4>
+    <p>Walk the three topics. Each is self-contained and ends in a recap, so latecomers or partial attendees still get value. Topic 1 is the foundation — architecture and integration. Topic 2 is what most security and infrastructure reviewers care about. Topic 3 is specific to this prospect's Australian footprint.</p>
+    <h4>Manage expectations</h4>
+    <p>This is a reference deck — it doubles as a leave-behind. Tell the audience they do not need to capture everything; they will get the file. Ask them to hold detailed commercial questions (pricing, licensing) and keep the discussion technical.</p>
+    <h4>Interactivity</h4>
+    <p>Demonstrate the diagram interaction once here so the room knows the diagrams are live, not screenshots.</p>
+  </div>
+</div>
+
+<div id="help">
+  <div class="hc">
+    <h3>Presenter controls</h3>
+    <div class="hr"><span>Next / previous slide</span><span><kbd>→</kbd> <kbd>←</kbd> / <kbd>Space</kbd></span></div>
+    <div class="hr"><span>Jump to first / last</span><span><kbd>Home</kbd> <kbd>End</kbd></span></div>
+    <div class="hr"><span>Toggle speaker notes</span><span><kbd>N</kbd></span></div>
+    <div class="hr"><span>Overview grid</span><span><kbd>O</kbd></span></div>
+    <div class="hr"><span>Fullscreen</span><span><kbd>F</kbd></span></div>
+    <div class="hr"><span>Close this panel</span><span><kbd>Esc</kbd></span></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   DECK FRAMEWORK
+   ============================================================ */
+const slides=[...document.querySelectorAll('.slide')];
+const TOTAL=slides.length;
+let cur=0;
+const stage=document.getElementById('stage');
+const initOnce={};
+
+function fit(){
+  const s=Math.min(window.innerWidth/1280,window.innerHeight/720);
+  stage.style.transform=`translate(-50%,-50%) scale(${s})`;
+}
+window.addEventListener('resize',fit);fit();
+
+function setCnt(){
+  const p=String(cur+1).padStart(2,'0');
+  document.getElementById('cnt').innerHTML='<b>'+p+'</b> / '+String(TOTAL).padStart(2,'0');
+  document.getElementById('progress').style.width=((cur+1)/TOTAL*100)+'%';
+}
+function renderNotes(){
+  const sl=slides[cur];
+  const nd=sl.querySelector('.notes-data');
+  const kick=sl.getAttribute('data-label')||('Slide '+(cur+1));
+  document.getElementById('nxLabel').textContent=kick+'  ·  '+String(cur+1).padStart(2,'0')+'/'+TOTAL;
+  document.getElementById('nBody').innerHTML=nd?nd.innerHTML:'<p>—</p>';
+}
+function show(i){
+  i=Math.max(0,Math.min(TOTAL-1,i));
+  slides[cur].classList.remove('active');
+  cur=i;
+  slides[cur].classList.add('active');
+  setCnt();renderNotes();
+  const id=slides[cur].id;
+  if(initOnce[id]&&!initOnce[id].done){initOnce[id].done=true;try{initOnce[id].fn();}catch(e){console.error(e);}}
+}
+function next(){show(cur+1);}
+function prev(){show(cur-1);}
+
+document.getElementById('bNext').onclick=next;
+document.getElementById('bPrev').onclick=prev;
+document.getElementById('bNotes').onclick=()=>document.getElementById('notes').classList.toggle('on');
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='PageDown'){next();}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){prev();}
+  else if(e.key===' '){e.preventDefault();next();}
+  else if(e.key==='Home'){show(0);}
+  else if(e.key==='End'){show(TOTAL-1);}
+  else if(e.key==='n'||e.key==='N'){document.getElementById('notes').classList.toggle('on');}
+  else if(e.key==='?'){document.getElementById('help').classList.toggle('on');}
+  else if(e.key==='o'||e.key==='O'){toggleOverview();}
+  else if(e.key==='f'||e.key==='F'){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}
+  else if(e.key==='Escape'){document.getElementById('help').classList.remove('on');document.getElementById('notes').classList.remove('on');}
+});
+/* click zones for navigation */
+document.getElementById('viewport').addEventListener('click',e=>{
+  if(e.target.closest('.n-node,.tg,button,a,.no-nav,#notes,#help'))return;
+  const x=e.clientX/window.innerWidth;
+  if(x>0.62)next();else if(x<0.20)prev();
+});
+/* overview grid */
+let overviewOn=false;
+function toggleOverview(){
+  overviewOn=!overviewOn;
+  if(overviewOn){
+    stage.style.transition='transform .3s ease';
+    const cols=8,rows=Math.ceil(TOTAL/cols);
+  }
+}
+/* tooltip helper shared by diagrams */
+function mkTip(container){
+  const t=document.createElement('div');t.className='dg-tip';container.appendChild(t);
+  return{
+    show(html,x,y){t.innerHTML=html;t.classList.add('on');
+      const w=t.offsetWidth,h=t.offsetHeight;
+      let nx=x+16,ny=y-h-10;
+      if(nx+w>container.offsetWidth)nx=x-w-16;
+      if(ny<0)ny=y+18;
+      t.style.left=nx+'px';t.style.top=ny+'px';},
+    hide(){t.classList.remove('on');}
+  };
+}
+/* ============================================================
+   DIAGRAMS — shared helpers
+   ============================================================ */
+const C={page:'#090909',s1:'#131316',s2:'#1b1b1f',s3:'#26262b',
+  line:'rgba(255,255,255,.13)',line2:'rgba(255,255,255,.24)',
+  tx:'#F2F2F3',dim:'#9A9AA2',faint:'#74747e',
+  v1:'#48157C',v2:'#8427E2',v3:'#A855F7',teal:'#2DD4BF',blue:'#3B82F6',
+  hi:'#EF4444',md:'#F59E0B',lo:'#27B663'};
+const SANS="'Inter Tight',sans-serif",MONO="'JetBrains Mono',monospace";
+
+function dgReg(slideId,hostId,vbW,vbH,fn){
+  initOnce[slideId]={done:false,fn:function(){
+    const el=document.getElementById(hostId);
+    if(!el)return;
+    el.innerHTML='';
+    const svg=d3.select(el).append('svg').attr('viewBox','0 0 '+vbW+' '+vbH);
+    const tip=mkTip(el);
+    const px=e=>{const r=el.getBoundingClientRect();
+      const sc=(r.width/el.offsetWidth)||1;
+      return[(e.clientX-r.left)/sc,(e.clientY-r.top)/sc];};
+    fn(svg,tip,px,vbW,vbH,el);
+  }};
+}
+function R(p,x,y,w,h,o){o=o||{};
+  return p.append('rect').attr('x',x).attr('y',y).attr('width',w).attr('height',h)
+   .attr('rx',o.r==null?9:o.r).attr('fill',o.fill||'none')
+   .attr('stroke',o.stroke||'none').attr('stroke-width',o.sw==null?1:o.sw);}
+function T(p,x,y,s,o){o=o||{};
+  const t=p.append('text').attr('x',x).attr('y',y).text(s)
+   .attr('font-family',o.mono?MONO:SANS).attr('font-size',o.fs||12)
+   .attr('fill',o.fill||C.tx).attr('font-weight',o.fw||400);
+  if(o.anchor)t.attr('text-anchor',o.anchor);
+  if(o.ls)t.attr('letter-spacing',o.ls);
+  return t;}
+
+/* ============================================================
+   05 · LAYERED ARCHITECTURE
+   ============================================================ */
+dgReg('s05','dg-layers',540,602,function(svg,tip,px){
+  const tiers=[
+    {id:'pres',name:'Presentation tier',role:'Human users & devices',color:C.v3,
+     comps:[
+       {s:'Aurena',f:'Aurena web client',d:'HTML5 browser client — the full application on any device, nothing installed.'},
+       {s:'Mobile apps',f:'Mobile applications',d:'Native iOS and Android apps for field and frontline users.'},
+       {s:'Office add-ins',f:'Office add-ins',d:'Integration into productivity tools such as Excel and Outlook.'}]},
+    {id:'mid',name:'Middle tier',role:'Containerised business logic',color:C.v2,
+     comps:[
+       {s:'OData API',f:'OData API back-end',d:'Exposes all business logic as REST services on the OData standard.'},
+       {s:'IAM',f:'Identity & Access Manager',d:'Authentication, sessions and permission enforcement at the gateway.'},
+       {s:'Client services',f:'Client & integration services',d:'Serve the Aurena client and broker messages to external systems.'}]},
+    {id:'data',name:'Data tier',role:'Normalised relational storage',color:C.teal,
+     comps:[
+       {s:'Oracle RDBMS',f:'Oracle RDBMS',d:'Primary relational store — proven at large enterprise scale.'},
+       {s:'Azure SQL',f:'Azure SQL',d:'Used for selected modules, depending on configuration.'},
+       {s:'PL/SQL logic',f:'PL/SQL business logic',d:'The enforced gate — data is reachable only through business logic.'}]}
+  ];
+  const X=12,W=516,Y0=10,TH=176,GAP=28;
+  const groups={};let active='pres';
+  tiers.forEach((t,i)=>{
+    const y=Y0+i*(TH+GAP);t._y=y;
+    const g=svg.append('g').attr('opacity',0);groups[t.id]=g;
+    g._panel=R(g,X,y,W,TH,{r:14,fill:'#0e0e10',stroke:C.line});
+    R(g,X,y,5,TH,{r:2.5,fill:t.color});
+    T(g,X+26,y+36,t.name,{fs:18,fw:600});
+    T(g,X+26,y+57,t.role.toUpperCase(),{fs:9.5,mono:1,fill:C.faint,ls:1.4});
+    T(g,X+W-22,y+36,'TIER '+(i+1),{fs:11,mono:1,fill:t.color,anchor:'end',ls:1});
+    const cw=(W-52-24)/3,cy=y+78,ch=TH-78-20;
+    t.comps.forEach((c,ci)=>{
+      const cx=X+26+ci*(cw+12);
+      const cg=g.append('g').attr('class','n-node');
+      c._r=R(cg,cx,cy,cw,ch,{r:9,fill:C.s2,stroke:C.line});
+      c._dot=cg.append('circle').attr('cx',cx+15).attr('cy',cy+19).attr('r',3.5).attr('fill',t.color);
+      T(cg,cx+cw/2,cy+ch/2+1,c.s,{fs:11.5,fw:600,anchor:'middle'});
+      T(cg,cx+cw/2,cy+ch/2+18,'hover',{fs:8,mono:1,fill:C.faint,anchor:'middle',ls:1.2});
+      cg.on('mousemove',e=>{const m=px(e);
+        tip.show('<div class="tk">'+t.name+'</div><div class="tt">'+c.f+'</div><div class="td">'+c.d+'</div>',m[0],m[1]);})
+       .on('mouseleave',()=>tip.hide());
+    });
+    R(g,X,y,W,62,{r:14,fill:'transparent'}).style('cursor','pointer')
+      .on('click',()=>{active=t.id;render();});
+    if(i<tiers.length-1){
+      const gy=y+TH+GAP/2;
+      const fg=svg.append('g');
+      fg.append('line').attr('x1',X+W/2).attr('y1',gy-11).attr('x2',X+W/2).attr('y2',gy+7)
+        .attr('stroke',C.line2).attr('stroke-width',1.5);
+      fg.append('path').attr('d','M'+(X+W/2-5)+','+(gy+4)+' L'+(X+W/2+5)+','+(gy+4)+' L'+(X+W/2)+','+(gy+11)+' Z').attr('fill',C.v3);
+      T(fg,X+W/2+16,gy+4,i===0?'HTTPS':'Business logic only',{fs:9,mono:1,fill:C.faint,ls:1});
+    }
+  });
+  function render(){
+    tiers.forEach(t=>{
+      const on=t.id===active;
+      groups[t.id].transition().duration(280).attr('opacity',on?1:.5);
+      groups[t.id]._panel.transition().duration(280)
+        .attr('stroke',on?t.color:C.line).attr('stroke-width',on?1.8:1).attr('fill',on?C.s1:'#0e0e10');
+      t.comps.forEach(c=>{
+        c._r.transition().duration(280).attr('fill',on?C.s3:C.s2).attr('stroke',on?C.line2:C.line);
+      });
+    });
+  }
+  tiers.forEach((t,i)=>{
+    groups[t.id].transition().delay(i*150).duration(520).attr('opacity',t.id===active?1:.5);
+  });
+  render();
+});
+
+/* ============================================================
+   07 · CONTAINER TOPOLOGY
+   ============================================================ */
+dgReg('s07','dg-container',1140,468,function(svg,tip,px){
+  const pods=[
+    {s:'OData API',f:'OData API back-end',d:'Serves all REST/OData traffic for the environment.'},
+    {s:'IAM',f:'Identity & Access Manager',d:'Authentication, sessions and permission enforcement.'},
+    {s:'Client svc',f:'Client services',d:'Serves the Aurena web client and session state.'},
+    {s:'Integration',f:'Integration services',d:'Brokers messages to and from external systems.'}
+  ];
+  const ns=[
+    {id:'prd',name:'PROD',full:'Production namespace',d:'The live environment, covered by the application-availability SLA.'},
+    {id:'tst',name:'TEST',full:'Test namespace',d:'Isolated environment for validating changes before production.'},
+    {id:'cfg',name:'CFG',full:'Configuration namespace',d:'Environment for tailoring and configuration work.'}
+  ];
+  let active='prd',ingressOn=false;
+  // clients
+  const clients=['Aurena','Mobile','Integrations'];
+  const cg=svg.append('g');
+  R(cg,18,150,118,168,{r:11,fill:C.s1,stroke:C.line});
+  T(cg,77,176,'CLIENTS',{fs:9.5,mono:1,fill:C.faint,anchor:'middle',ls:1.6});
+  clients.forEach((c,i)=>{
+    R(cg,32,196+i*36,90,28,{r:7,fill:C.s2,stroke:C.line});
+    T(cg,77,214+i*36,c,{fs:10.5,anchor:'middle',fill:C.dim});
+  });
+  // ingress hex
+  const ix=246,iy=234,ir=52;
+  const hex=svg.append('g').attr('class','n-node');
+  const hpath=d3.range(6).map(k=>{const a=Math.PI/6+k*Math.PI/3;
+    return[ix+ir*Math.cos(a),iy+ir*Math.sin(a)];});
+  const hp=hex.append('path').attr('d','M'+hpath.map(p=>p.join(',')).join(' L')+'Z')
+    .attr('fill',C.s1).attr('stroke',C.v2).attr('stroke-width',1.6);
+  T(hex,ix,iy-6,'Ingress',{fs:12,fw:600,anchor:'middle'});
+  T(hex,ix,iy+11,'proxy',{fs:12,fw:600,anchor:'middle'});
+  T(hex,ix,iy+27,'ROUTING',{fs:7.5,mono:1,fill:C.v3,anchor:'middle',ls:1.5});
+  // clients -> ingress
+  svg.append('path').attr('d','M136,234 L'+(ix-ir)+',234').attr('stroke',C.line2).attr('stroke-width',1.5).attr('fill','none');
+  // cluster
+  const CX=372,CY=20,CW=748,CH=428;
+  R(svg,CX,CY,CW,CH,{r:16,fill:'rgba(132,39,226,.04)',stroke:C.line2,sw:1.4});
+  T(svg,CX+22,CY+30,'KUBERNETES CLUSTER',{fs:10,mono:1,fill:C.v3,ls:2});
+  T(svg,CX+CW-22,CY+30,'one cluster · many environments',{fs:9.5,mono:1,fill:C.faint,anchor:'end',ls:.5});
+  // namespaces
+  const nw=224,nh=330,ny=CY+58,routes=[];
+  ns.forEach((n,i)=>{
+    const nx=CX+24+i*(nw+14);n._x=nx;
+    const g=svg.append('g').attr('class','n-node');n._g=g;
+    n._panel=R(g,nx,ny,nw,nh,{r:12,fill:C.s1,stroke:C.line});
+    R(g,nx,ny,nw,30,{r:12,fill:C.s2});
+    R(g,nx,ny+18,nw,12,{r:0,fill:C.s2});
+    n._tab=g.append('circle').attr('cx',nx+18).attr('cy',ny+15).attr('r',4).attr('fill',C.faint);
+    T(g,nx+32,ny+19,n.name,{fs:11,mono:1,fw:600,ls:1});
+    T(g,nx+nw-14,ny+19,'namespace',{fs:8,mono:1,fill:C.faint,anchor:'end',ls:.8});
+    // 2x2 pods
+    const pw=(nw-46)/2,ph=(nh-66)/2;
+    pods.forEach((p,pi)=>{
+      const pxx=nx+16+(pi%2)*(pw+14),pyy=ny+44+Math.floor(pi/2)*(ph+12);
+      const pg=g.append('g');p['_'+n.id]=pg;
+      const pr=R(pg,pxx,pyy,pw,ph,{r:8,fill:C.s2,stroke:C.line});
+      pg.append('circle').attr('cx',pxx+13).attr('cy',pyy+15).attr('r',3).attr('fill',n._color||C.v3);
+      T(pg,pxx+pw/2,pyy+ph/2+2,p.s,{fs:9.5,fw:600,anchor:'middle'});
+      T(pg,pxx+pw/2,pyy+ph/2+16,'container',{fs:7,mono:1,fill:C.faint,anchor:'middle',ls:1});
+      pg.on('mousemove',e=>{const m=px(e);
+        tip.show('<div class="tk">'+n.name+' · pod</div><div class="tt">'+p.f+'</div><div class="td">'+p.d+'</div>',m[0],m[1]);})
+        .on('mouseleave',()=>tip.hide());
+    });
+    // route from ingress
+    const rp=svg.insert('path',':first-child').attr('d',
+      'M'+(ix+ir)+','+iy+' C'+(ix+120)+','+iy+' '+(nx-50)+','+(ny+nh/2)+' '+nx+','+(ny+nh/2))
+      .attr('stroke',C.line).attr('stroke-width',1.5).attr('fill','none');
+    routes.push(rp);
+    n._panel.style('cursor','pointer').on('click',()=>{active=n.id;ingressOn=false;render();});
+    R(g,nx,ny,nw,30,{fill:'transparent'}).style('cursor','pointer')
+      .on('click',()=>{active=n.id;ingressOn=false;render();});
+    g.on('mousemove',e=>{if(e.target.closest('g')&&e.target.tagName==='rect'){}})
+  });
+  hex.style('cursor','pointer').on('click',()=>{ingressOn=!ingressOn;render();})
+    .on('mousemove',e=>{const m=px(e);
+      tip.show('<div class="tk">Shared ingress</div><div class="tt">Ingress proxy</div><div class="td">Inspects each request and routes it to the correct environment namespace. Click to highlight the routing paths.</div>',m[0],m[1]);})
+    .on('mouseleave',()=>tip.hide());
+  function render(){
+    ns.forEach(n=>{
+      const on=n.id===active;
+      n._g.transition().duration(260).attr('opacity',on?1:.46);
+      n._panel.transition().duration(260)
+        .attr('stroke',on?C.v2:C.line).attr('stroke-width',on?1.8:1);
+      n._tab.transition().duration(260).attr('fill',on?C.v3:C.faint);
+    });
+    routes.forEach((rp,i)=>{
+      const on=ingressOn||ns[i].id===active;
+      rp.transition().duration(260)
+        .attr('stroke',on?C.v3:C.line).attr('stroke-width',on?2:1.5)
+        .attr('stroke-dasharray',ingressOn?'5,5':'none');
+    });
+    hp.transition().duration(260).attr('stroke',ingressOn?C.v3:C.v2).attr('stroke-width',ingressOn?2.4:1.6);
+  }
+  svg.selectAll('g').attr('opacity',0);
+  svg.selectAll('g').transition().delay((d,i)=>i*70).duration(420).attr('opacity',1);
+  setTimeout(render,500);
+});
+
+/* ============================================================
+   13 · INTEGRATION PATTERN SELECTOR
+   ============================================================ */
+dgReg('s13','dg-integ',1140,468,function(svg,tip,px){
+  const map=[
+    {req:'Modern, synchronous request / response',reqd:'Real-time calls between current systems',
+     pat:'REST / OData API',patd:'Lightweight, standards-based — the same interface the IFS Cloud UI uses. The default route for new integration.',color:C.v2},
+    {req:'Message-based or legacy protocols',reqd:'Asynchronous links to older or partner systems',
+     pat:'IFS Connect broker',patd:'Built-in broker with SOAP, MQ, SFTP and file connectors, content-based routing and transformation.',color:C.v3},
+    {req:'Push notification on a business event',reqd:'External system must react when something happens',
+     pat:'Business events',patd:'The platform raises events; external systems subscribe through IFS Connect. No polling, no delay.',color:C.teal},
+    {req:'Complex logic across many systems',reqd:'Orchestration and master-data sync at scale',
+     pat:'External iPaaS hub',patd:'Move orchestration into a Boomi hub-and-spoke layer — low-code, GUI-based, business-user maintainable.',color:C.blue}
+  ];
+  let sel=0;
+  const LX=24,RX=720,CW=380,CH=72,GAP=15,Y0=18;
+  const lefts=[],rights=[],lines=[];
+  map.forEach((m,i)=>{
+    const y=Y0+i*(CH+GAP);m._y=y;
+    // connector
+    const ln=svg.append('path').attr('d',
+      'M'+(LX+CW)+','+(y+CH/2)+' C'+(LX+CW+90)+','+(y+CH/2)+' '+(RX-90)+','+(y+CH/2)+' '+RX+','+(y+CH/2))
+      .attr('fill','none').attr('stroke',C.line).attr('stroke-width',1.5);
+    lines.push(ln);
+    // left card (requirement)
+    const lg=svg.append('g').attr('class','n-node');lefts.push(lg);
+    const lr=R(lg,LX,y,CW,CH,{r:11,fill:C.s1,stroke:C.line});lg._r=lr;
+    lg._bar=R(lg,LX,y,4,CH,{r:2,fill:C.faint});
+    T(lg,LX+24,y+30,'REQUIREMENT 0'+(i+1),{fs:8.5,mono:1,fill:C.faint,ls:1.6});
+    T(lg,LX+24,y+50,m.req,{fs:13,fw:600});
+    lg.on('click',()=>{sel=i;render();})
+      .on('mousemove',e=>{const mm=px(e);
+        tip.show('<div class="tk">Requirement</div><div class="tt">'+m.req+'</div><div class="td">'+m.reqd+'</div>',mm[0],mm[1]);})
+      .on('mouseleave',()=>tip.hide());
+    // right card (pattern)
+    const rg=svg.append('g').attr('class','n-node');rights.push(rg);
+    const rr=R(rg,RX,y,CW,CH,{r:11,fill:C.s1,stroke:C.line});rg._r=rr;
+    rg._dot=rg.append('circle').attr('cx',RX+22).attr('cy',y+CH/2).attr('r',5).attr('fill',C.faint);
+    T(rg,RX+40,y+30,'PATTERN',{fs:8.5,mono:1,fill:C.faint,ls:1.6});
+    rg._title=T(rg,RX+40,y+50,m.pat,{fs:13,fw:600});
+    rg.on('click',()=>{sel=i;render();})
+      .on('mousemove',e=>{const mm=px(e);
+        tip.show('<div class="tk">Recommended pattern</div><div class="tt">'+m.pat+'</div><div class="td">'+m.patd+'</div>',mm[0],mm[1]);})
+      .on('mouseleave',()=>tip.hide());
+  });
+  // rationale strip
+  const sy=Y0+4*(CH+GAP)+6;
+  R(svg,LX,sy,RX+CW-LX,62,{r:11,fill:'rgba(132,39,226,.06)',stroke:C.line2,sw:1.3});
+  const ratK=T(svg,LX+22,sy+26,'WHY THIS PATTERN',{fs:9,mono:1,fill:C.v3,ls:1.8});
+  const ratT=T(svg,LX+22,sy+47,'',{fs:12.5,fill:C.dim});
+  function render(){
+    map.forEach((m,i)=>{
+      const on=i===sel;
+      lefts[i]._r.transition().duration(240).attr('stroke',on?m.color:C.line).attr('stroke-width',on?1.8:1).attr('fill',on?C.s2:C.s1);
+      lefts[i]._bar.transition().duration(240).attr('fill',on?m.color:C.faint);
+      lefts[i].transition().duration(240).attr('opacity',on?1:.5);
+      rights[i]._r.transition().duration(240).attr('stroke',on?m.color:C.line).attr('stroke-width',on?1.8:1).attr('fill',on?C.s2:C.s1);
+      rights[i]._dot.transition().duration(240).attr('fill',on?m.color:C.faint).attr('r',on?6:5);
+      rights[i].transition().duration(240).attr('opacity',on?1:.5);
+      lines[i].transition().duration(240).attr('stroke',on?m.color:C.line).attr('stroke-width',on?2.4:1.5).attr('stroke-dasharray',on?'none':'3,4');
+    });
+    ratT.text(map[sel].patd);
+  }
+  svg.selectAll('g').attr('opacity',0);
+  svg.selectAll('g').transition().delay((d,i)=>i*60).duration(380).attr('opacity',1).on('end',function(){d3.select(this).attr('opacity',null);});
+  setTimeout(render,520);
+});
+
+/* ============================================================
+   16 · KUBERNETES RUNTIME — scaling controls
+   ============================================================ */
+dgReg('s16','dg-k8s',1140,468,function(svg,tip,px){
+  let nodes=2,reps=3;
+  const NMAX=4,RMAX=8;
+  // controls
+  const ctl=[
+    {label:'+ Add node',act:()=>{if(nodes<NMAX)nodes++;}},
+    {label:'+ Add replica',act:()=>{if(reps<RMAX)reps++;}},
+    {label:'− Remove replica',act:()=>{if(reps>1)reps--;}},
+    {label:'Reset',act:()=>{nodes=2;reps=3;}}
+  ];
+  let bx=4;
+  ctl.forEach(c=>{
+    const w=c.label.length*7.4+26;
+    const g=svg.append('g').attr('class','n-node');
+    const r=R(g,bx,6,w,32,{r:8,fill:C.s2,stroke:C.line2});
+    T(g,bx+w/2,6+20,c.label,{fs:11,anchor:'middle',fill:C.dim,mono:1});
+    g.on('click',()=>{c.act();draw();})
+     .on('mouseover',()=>r.attr('stroke',C.v3))
+     .on('mouseout',()=>r.attr('stroke',C.line2));
+    bx+=w+10;
+  });
+  // readout
+  const ro=svg.append('g');
+  const roT=T(ro,1136,26,'',{fs:11,mono:1,anchor:'end',fill:C.dim});
+  // cluster
+  const CX=4,CY=58,CW=1132,CH=402;
+  R(svg,CX,CY,CW,CH,{r:16,fill:'rgba(45,212,191,.04)',stroke:C.line2,sw:1.4});
+  T(svg,CX+22,CY+30,'KUBERNETES CLUSTER',{fs:10,mono:1,fill:C.teal,ls:2});
+  const haBadge=svg.append('g');
+  const dyn=svg.append('g');
+  const innerX=CX+24,innerY=CY+48,innerW=CW-48,innerH=CH-118;
+  const GAP=18;
+  function draw(){
+    dyn.selectAll('*').remove();haBadge.selectAll('*').remove();
+    const nw=(innerW-(nodes-1)*GAP)/nodes;
+    const cnt=Array(nodes).fill(0);
+    for(let r=0;r<reps;r++)cnt[r%nodes]++;
+    let rg=0;
+    for(let n=0;n<nodes;n++){
+      const nx=innerX+n*(nw+GAP);
+      const ng=dyn.append('g').attr('opacity',0);
+      R(ng,nx,innerY,nw,innerH,{r:12,fill:C.s1,stroke:C.line});
+      R(ng,nx,innerY,nw,30,{r:12,fill:C.s2});
+      R(ng,nx,innerY+18,nw,12,{r:0,fill:C.s2});
+      ng.append('circle').attr('cx',nx+17).attr('cy',innerY+15).attr('r',3.6).attr('fill',C.teal);
+      T(ng,nx+30,innerY+19,'Node '+(n+1),{fs:10.5,mono:1,fw:600});
+      T(ng,nx+nw-14,innerY+19,cnt[n]+(cnt[n]===1?' pod':' pods'),{fs:8.5,mono:1,fill:C.faint,anchor:'end'});
+      ng.on('mousemove',e=>{const m=px(e);
+        tip.show('<div class="tk">Cluster node</div><div class="tt">Node '+(n+1)+'</div><div class="td">Runs '+cnt[n]+' container replica'+(cnt[n]===1?'':'s')+'. If this node fails, Kubernetes reschedules its pods onto the surviving nodes.</div>',m[0],m[1]);})
+        .on('mouseleave',()=>tip.hide());
+      ng.transition().delay(n*70).duration(360).attr('opacity',1);
+      const pw=(nw-32-12)/2,ph=50;
+      for(let k=0;k<cnt[n];k++){
+        const pxx=nx+16+(k%2)*(pw+12);
+        const pyy=innerY+44+Math.floor(k/2)*(ph+11);
+        const myR=rg++;
+        const pg=dyn.append('g').attr('class','n-node').attr('opacity',0);
+        R(pg,pxx,pyy,pw,ph,{r:8,fill:'rgba(132,39,226,.14)',stroke:C.v2,sw:1.3});
+        pg.append('circle').attr('cx',pxx+13).attr('cy',pyy+14).attr('r',3).attr('fill',C.v3);
+        T(pg,pxx+pw/2,pyy+ph/2,'OData API',{fs:9.5,fw:600,anchor:'middle'});
+        T(pg,pxx+pw/2,pyy+ph/2+14,'replica '+(myR+1),{fs:7.5,mono:1,fill:C.v3,anchor:'middle'});
+        pg.attr('transform','translate(0,10)')
+          .on('mousemove',e=>{const m=px(e);
+            tip.show('<div class="tk">Container · pod</div><div class="tt">OData API back-end &mdash; replica '+(myR+1)+'</div><div class="td">A running copy of the service, scheduled on Node '+(n+1)+'. Adding replicas spreads load; placing them on different nodes provides high availability.</div>',m[0],m[1]);})
+          .on('mouseleave',()=>tip.hide());
+        pg.transition().delay(200+myR*55).duration(340).attr('opacity',1).attr('transform','translate(0,0)');
+      }
+    }
+    const usedNodes=Math.min(nodes,reps);
+    const ha=reps>=2&&usedNodes>=2;
+    roT.text('NODES '+nodes+'   ·   REPLICAS '+reps);
+    const by=CY+CH-44;
+    R(haBadge,CX+22,by,300,30,{r:8,fill:ha?'rgba(39,182,99,.12)':'rgba(245,158,11,.10)',
+      stroke:ha?C.lo:C.md,sw:1.2});
+    haBadge.append('circle').attr('cx',CX+40).attr('cy',by+15).attr('r',4).attr('fill',ha?C.lo:C.md);
+    T(haBadge,CX+54,by+19,ha?'HIGH AVAILABILITY · ACTIVE':'HIGH AVAILABILITY · AT RISK',
+      {fs:9.5,mono:1,fill:ha?C.lo:C.md,ls:1});
+    T(haBadge,CX+340,by+19,ha?('Replicas span '+usedNodes+' nodes — a node failure is survivable.'):'Add a replica so copies span multiple nodes.',
+      {fs:10.5,fill:C.dim});
+  }
+  draw();
+});
+
+/* ============================================================
+   19 · DEFENCE IN DEPTH — concentric rings
+   ============================================================ */
+dgReg('s19','dg-security',1140,468,function(svg,tip,px){
+  const layers=[
+    {n:'Azure platform',c:C.blue,k:'LAYER 1 · INFRASTRUCTURE',
+     ctl:['Physical data-centre security','Platform-level DDoS protection','Host & hypervisor firewalls','ISO 27001 & IRAP-assessed infrastructure']},
+    {n:'Network',c:C.teal,k:'LAYER 2 · PERIMETER',
+     ctl:['Web Application Firewall','Proxy and ingress / egress control','Network segregation','TLS-encrypted transport everywhere']},
+    {n:'Identity',c:C.v3,k:'LAYER 3 · ACCESS',
+     ctl:['OpenID Connect federation','Multi-factor authentication','Single sign-on','Conditional access policies']},
+    {n:'Application',c:C.v2,k:'LAYER 4 · AUTHORISATION',
+     ctl:['Role-based Permission Sets','Segregation-of-duties rules','Company / Site data visibility','End-user history logging']},
+    {n:'Data',c:'#E879F9',k:'LAYER 5 · THE ASSET',
+     ctl:['Encryption at rest and in transit','Single-tenant isolation','Azure Key Vault key custody','Business-logic-only data access']}
+  ];
+  let sel=0;
+  const cx=290,cy=222,radii=[210,170,130,90,52];
+  const circles=[];
+  layers.forEach((L,i)=>{
+    const c=svg.append('circle').attr('class','n-node')
+      .attr('cx',cx).attr('cy',cy).attr('r',radii[i])
+      .attr('fill',i===4?L.c:L.c).attr('fill-opacity',.12)
+      .attr('stroke',L.c).attr('stroke-width',1.3).attr('stroke-opacity',.5);
+    circles.push(c);
+    const mid=(radii[i]+(radii[i+1]||0))/2;
+    T(svg,cx,cy-mid+4,L.n,{fs:i===4?12:12.5,fw:600,anchor:'middle'})
+      .attr('pointer-events','none');
+    c.on('click',()=>{sel=i;render();})
+     .on('mousemove',e=>{const m=px(e);
+       tip.show('<div class="tk">'+L.k+'</div><div class="tt">'+L.n+'</div><div class="td">Click to inspect this layer’s controls.</div>',m[0],m[1]);})
+     .on('mouseleave',()=>tip.hide());
+  });
+  T(svg,cx,cy+radii[0]+26,'DEFENCE IN DEPTH — OUTER TO CORE',{fs:9,mono:1,fill:C.faint,anchor:'middle',ls:1.6});
+  // panel
+  const PX=606,PY=20,PW=512,PH=428;
+  R(svg,PX,PY,PW,PH,{r:14,fill:C.s1,stroke:C.line});
+  const pBar=R(svg,PX,PY,5,PH,{r:2.5,fill:C.v2});
+  const pK=T(svg,PX+30,PY+40,'',{fs:9.5,mono:1,fill:C.v3,ls:1.8});
+  const pN=T(svg,PX+30,PY+72,'',{fs:24,fw:600});
+  const pHint=T(svg,PX+30,PY+96,'Controls enforced at this layer',{fs:11,fill:C.faint});
+  const pCtl=svg.append('g');
+  function render(){
+    layers.forEach((L,i)=>{
+      const on=i===sel;
+      circles[i].transition().duration(260)
+        .attr('fill-opacity',on?.32:.1)
+        .attr('stroke-opacity',on?1:.4)
+        .attr('stroke-width',on?2.6:1.3);
+    });
+    const L=layers[sel];
+    pBar.transition().duration(220).attr('fill',L.c);
+    pK.text(L.k);pN.text(L.n+' layer');
+    pCtl.selectAll('*').remove();
+    L.ctl.forEach((c,i)=>{
+      const y=PY+128+i*62;
+      const row=pCtl.append('g').attr('opacity',0);
+      R(row,PX+30,y,PW-60,50,{r:9,fill:C.s2,stroke:C.line});
+      row.append('circle').attr('cx',PX+52).attr('cy',y+25).attr('r',4).attr('fill',L.c);
+      T(row,PX+70,y+30,c,{fs:13,fw:500});
+      row.transition().delay(i*70).duration(320).attr('opacity',1);
+    });
+  }
+  render();
+});
+
+/* ============================================================
+   27 · EXTENSIBILITY & EVERGREEN
+   ============================================================ */
+dgReg('s27','dg-extend',1140,468,function(svg,tip,px){
+  const cards=[
+    {t:'Configure',k:'NO CODE',c:C.teal,layer:0,
+     d:'Power-user designers and tooling. Change layouts, add fields and pages, automate processes — without writing code.'},
+    {t:'Extend on the inside',k:'LOW CODE',c:C.v2,layer:1,
+     d:'Customise using the layered architecture, keeping custom logic in its own layer, separate from the IFS core.'},
+    {t:'Extend on the outside',k:'OPEN APIs',c:C.blue,layer:-1,
+     d:'Build custom clients and integrations, or use PowerApps, Mendix and Boomi against the 100% open APIs.'}
+  ];
+  let sel=1;
+  const cw=362,ch=150,cy0=10;
+  const cardG=[];
+  cards.forEach((c,i)=>{
+    const cx=12+i*(cw+13);
+    const g=svg.append('g').attr('class','n-node');cardG.push(g);
+    g._r=R(g,cx,cy0,cw,ch,{r:13,fill:C.s1,stroke:C.line});
+    g._bar=R(g,cx,cy0,cw,4,{r:2,fill:c.c});
+    T(g,cx+24,cy0+34,c.k,{fs:9,mono:1,fill:c.c,ls:1.8});
+    T(g,cx+24,cy0+62,c.t,{fs:18,fw:600});
+    const words=c.d.split(' ');let line='',ln=0;
+    words.forEach(w=>{
+      if((line+' '+w).length>46){T(g,cx+24,cy0+90+ln*19,line,{fs:11.5,fill:C.dim});line=w;ln++;}
+      else line=line?line+' '+w:w;
+    });
+    T(g,cx+24,cy0+90+ln*19,line,{fs:11.5,fill:C.dim});
+    T(g,cx+cw-24,cy0+34,'0'+(i+1),{fs:10,mono:1,fill:C.faint,anchor:'end'});
+    g.on('click',()=>{sel=i;render();})
+     .on('mousemove',e=>{const m=px(e);
+       tip.show('<div class="tk">'+c.k+'</div><div class="tt">'+c.t+'</div><div class="td">'+c.d+'</div>',m[0],m[1]);})
+     .on('mouseleave',()=>tip.hide());
+  });
+  // bottom panel
+  const BX=12,BY=176,BW=1116,BH=282;
+  R(svg,BX,BY,BW,BH,{r:14,fill:'#0d0d0f',stroke:C.line});
+  T(svg,BX+24,BY+30,'LAYERED ARCHITECTURE — WHY CUSTOMISATION SURVIVES EVERY UPDATE',{fs:9.5,mono:1,fill:C.v3,ls:1.6});
+  // stacked layers
+  const stack=[
+    {id:1,n:'Customization layer',o:'CUSTOMER-OWNED',c:C.v2,oc:C.v3},
+    {id:0,n:'Configuration layer',o:'CUSTOMER-OWNED',c:C.teal,oc:C.teal},
+    {id:-2,n:'IFS Foundation',o:'IFS-OWNED',c:C.faint,oc:C.faint},
+    {id:-3,n:'IFS Core',o:'IFS-OWNED',c:C.blue,oc:C.blue,ver:true}
+  ];
+  const lx=BX+30,lw=640,lh=44,lg=10,ly0=BY+52;
+  const layerEls=[];
+  stack.forEach((s,i)=>{
+    const y=ly0+i*(lh+lg);
+    const g=svg.append('g');layerEls.push({s:s,g:g,y:y});
+    g._r=R(g,lx,y,lw,lh,{r:9,fill:C.s2,stroke:C.line});
+    g.append('circle').attr('cx',lx+22).attr('cy',y+lh/2).attr('r',5).attr('fill',s.c);
+    T(g,lx+40,y+lh/2+1,s.n,{fs:13,fw:600});
+    T(g,lx+40,y+lh/2+15,s.o,{fs:7.5,mono:1,fill:C.faint,ls:1.2});
+    if(s.ver)g._ver=T(g,lx+lw-18,y+lh/2+4,'25R1',{fs:11,mono:1,fill:C.blue,anchor:'end',fw:600});
+  });
+  // owner brackets
+  T(svg,lx+lw+18,ly0+lh+lg/2+4,'↑ you change',{fs:9,mono:1,fill:C.v3});
+  T(svg,lx+lw+18,ly0+3*(lh+lg)+lh/2+4,'↓ IFS updates',{fs:9,mono:1,fill:C.blue});
+  // right side — update control
+  const ux=BX+760,uw=320;
+  T(svg,ux,BY+68,'EVERGREEN UPDATE',{fs:9,mono:1,fill:C.faint,ls:1.8});
+  const verList=['25R1','25R2','26R1','26R2'];let vi=0;
+  const btn=svg.append('g').attr('class','n-node');
+  const btnR=R(btn,ux,BY+82,uw,46,{r:10,fill:'rgba(132,39,226,.16)',stroke:C.v2,sw:1.5});
+  T(btn,ux+uw/2,BY+110,'▶  Apply Release Update',{fs:13,fw:600,anchor:'middle'});
+  const capG=svg.append('g');
+  function caption(txt,col){
+    capG.selectAll('*').remove();
+    R(capG,ux,BY+148,uw,86,{r:10,fill:C.s2,stroke:col||C.line});
+    const ws=txt.split(' ');let line='',ln=0;
+    ws.forEach(w=>{if((line+' '+w).length>34){T(capG,ux+18,BY+176+ln*18,line,{fs:11,fill:C.dim});line=w;ln++;}else line=line?line+' '+w:w;});
+    T(capG,ux+18,BY+176+ln*18,line,{fs:11,fill:C.dim});
+  }
+  caption('Customer layers sit above the IFS core. Apply an update to see what changes — and what does not.',C.line);
+  btn.on('click',()=>{
+    if(vi>=verList.length-1){vi=0;}else{vi++;}
+    const core=layerEls[3],found=layerEls[2];
+    [core,found].forEach(L=>{
+      L.g.select('rect').transition().duration(180).attr('fill','rgba(59,130,246,.28)')
+        .transition().duration(420).attr('fill',C.s2);
+      L.g.transition().duration(160).attr('transform','translate(-26,0)')
+        .transition().duration(420).attr('transform','translate(0,0)');
+    });
+    if(core.g._ver)core.g._ver.text(verList[vi]);
+    [layerEls[0],layerEls[1]].forEach(L=>{
+      L.g.select('rect').transition().duration(200).attr('stroke',C.lo).attr('stroke-width',2)
+        .transition().delay(700).duration(400).attr('stroke',C.line).attr('stroke-width',1);
+    });
+    caption('✓  Core updated to '+verList[vi]+'. Your configuration and customisation layers were preserved — untouched.',C.lo);
+  })
+  .on('mouseover',()=>btnR.attr('fill','rgba(132,39,226,.28)'))
+  .on('mouseout',()=>btnR.attr('fill','rgba(132,39,226,.16)'));
+  function render(){
+    cards.forEach((c,i)=>{
+      const on=i===sel;
+      cardG[i]._r.transition().duration(240).attr('stroke',on?c.c:C.line).attr('stroke-width',on?1.9:1).attr('fill',on?C.s2:C.s1);
+      cardG[i].transition().duration(240).attr('opacity',on?1:.55);
+    });
+    layerEls.forEach(L=>{
+      const hit=cards[sel].layer===L.s.id||(cards[sel].layer===-1&&false);
+      L.g.select('rect').transition().duration(240)
+        .attr('stroke',hit?cards[sel].c:C.line).attr('stroke-width',hit?2:1)
+        .attr('fill',hit?'rgba(132,39,226,.12)':C.s2);
+    });
+  }
+  render();
+});
+
+/* ============================================================
+   31 · SHARED RESPONSIBILITY
+   ============================================================ */
+dgReg('s31','dg-shared',1140,468,function(svg,tip,px){
+  const layers=[
+    {n:'End-user devices & network',o:'C',d:'Customer endpoints, browsers, and the corporate network used to reach the service.'},
+    {n:'Data & classification',o:'C',d:'The customer owns its data, and the obligations for classifying and handling it.'},
+    {n:'Users, roles & permissions',o:'C',d:'Application-level access — accounts, Permission Sets, joiner/mover/leaver — is governed by the customer.'},
+    {n:'Configuration & customisations',o:'C',d:'Tailoring decisions — configuration and custom logic — belong to and are controlled by the customer.'},
+    {n:'IFS Cloud application',o:'I',d:'IFS deploys, patches, monitors, and supports the IFS Cloud software 24×7×365.'},
+    {n:'Middleware & container runtime',o:'I',d:'The Kubernetes runtime and containerised middle-tier services are operated by IFS.'},
+    {n:'Database & operating system',o:'I',d:'Database and operating system — installed, patched, and managed by IFS.'},
+    {n:'Compute, storage & Azure platform',o:'I',d:'Infrastructure, physical data-centre security, and the Azure platform — IFS, on Microsoft Azure.'}
+  ];
+  let sel=2;
+  const X=24,W=556,h=42,gap=8,y0=46;
+  const els=[];
+  layers.forEach((L,i)=>{
+    const y=y0+i*(h+gap);
+    const col=L.o==='C'?C.v2:C.blue,oc=L.o==='C'?C.v3:C.blue;
+    const g=svg.append('g').attr('class','n-node').attr('opacity',0);els.push(g);
+    g._r=R(g,X,y,W,h,{r:9,fill:C.s1,stroke:C.line});
+    g._bar=R(g,X,y,4,h,{r:2,fill:col});
+    g.append('circle').attr('cx',X+24).attr('cy',y+h/2).attr('r',5).attr('fill',col);
+    T(g,X+42,y+h/2+1,L.n,{fs:13,fw:600});
+    T(g,X+W-16,y+h/2+1,L.o==='C'?'CUSTOMER':'IFS',{fs:8.5,mono:1,fill:oc,anchor:'end',ls:1.2});
+    g.on('click',()=>{sel=i;render();})
+     .on('mousemove',e=>{const m=px(e);
+       tip.show('<div class="tk">'+(L.o==='C'?'Customer-managed':'IFS-managed')+'</div><div class="tt">'+L.n+'</div><div class="td">'+L.d+'</div>',m[0],m[1]);})
+     .on('mouseleave',()=>tip.hide());
+    g.transition().delay(i*55).duration(360).attr('opacity',1).on('end',function(){d3.select(this).attr('opacity',null);});
+  });
+  // owner brackets
+  T(svg,X+W+16,y0+1.5*(h+gap)+4,'CUSTOMER',{fs:8.5,mono:1,fill:C.v3,ls:1});
+  T(svg,X+W+16,y0+1.5*(h+gap)+18,'owns the solution',{fs:8.5,mono:1,fill:C.faint});
+  T(svg,X+W+16,y0+5.5*(h+gap)+4,'IFS',{fs:8.5,mono:1,fill:C.blue,ls:1});
+  T(svg,X+W+16,y0+5.5*(h+gap)+18,'operates the stack',{fs:8.5,mono:1,fill:C.faint});
+  svg.append('line').attr('x1',X+W+12).attr('x2',X+W+12).attr('y1',y0).attr('y2',y0+4*(h+gap)-gap).attr('stroke',C.v2).attr('stroke-width',2);
+  svg.append('line').attr('x1',X+W+12).attr('x2',X+W+12).attr('y1',y0+4*(h+gap)).attr('y2',y0+8*(h+gap)-gap).attr('stroke',C.blue).attr('stroke-width',2);
+  // panel
+  const PX=720,PY=40,PW=398,PH=388;
+  R(svg,PX,PY,PW,PH,{r:14,fill:C.s1,stroke:C.line});
+  const pBar=R(svg,PX,PY,5,PH,{r:2.5,fill:C.v2});
+  const pK=T(svg,PX+28,PY+40,'',{fs:9.5,mono:1,ls:1.6});
+  const pN=T(svg,PX+28,PY+72,'',{fs:19,fw:600});
+  const pD=svg.append('g');
+  const pAcc=svg.append('g');
+  function render(){
+    layers.forEach((L,i)=>{
+      const on=i===sel;const col=L.o==='C'?C.v2:C.blue;
+      els[i]._r.transition().duration(220).attr('stroke',on?col:C.line).attr('stroke-width',on?2:1).attr('fill',on?C.s2:C.s1);
+      els[i].transition().duration(220).attr('opacity',on?1:.62);
+    });
+    const L=layers[sel];const col=L.o==='C'?C.v2:C.blue,oc=L.o==='C'?C.v3:C.blue;
+    pBar.transition().duration(200).attr('fill',col);
+    pK.attr('fill',oc).text(L.o==='C'?'CUSTOMER-MANAGED':'IFS-MANAGED');
+    pN.text(L.n);
+    pD.selectAll('*').remove();
+    const ws=L.d.split(' ');let line='',ln=0;
+    ws.forEach(w=>{if((line+' '+w).length>40){T(pD,PX+28,PY+108+ln*20,line,{fs:12.5,fill:C.dim});line=w;ln++;}else line=line?line+' '+w:w;});
+    T(pD,PX+28,PY+108+ln*20,line,{fs:12.5,fill:C.dim});
+    pAcc.selectAll('*').remove();
+    const accY=PY+PH-118;
+    R(pAcc,PX+24,accY,PW-48,94,{r:10,fill:C.s2,stroke:C.line});
+    T(pAcc,PX+44,accY+28,'ACCOUNTABILITY',{fs:8.5,mono:1,fill:C.faint,ls:1.6});
+    const acc=L.o==='C'
+      ?'The customer decides and controls. IFS provides the platform capability to do so securely.'
+      :'IFS is accountable — design, operation, patching, monitoring — under the application-availability SLA.';
+    const aw=acc.split(' ');let al='',aln=0;
+    aw.forEach(w=>{if((al+' '+w).length>42){T(pAcc,PX+44,accY+52+aln*18,al,{fs:11,fill:C.dim});al=w;aln++;}else al=al?al+' '+w:w;});
+    T(pAcc,PX+44,accY+52+aln*18,al,{fs:11,fill:C.dim});
+  }
+  render();
+});
+
+/* ============================================================
+   32 · AUSTRALIAN HOSTING MAP
+   ============================================================ */
+dgReg('s32','dg-map',1140,468,function(svg,tip,px){
+  const mg=svg.append('g').attr('transform','translate(70,58)');
+  // soft glow backdrop
+  R(svg,40,30,680,408,{r:18,fill:'rgba(59,130,246,.03)',stroke:C.line});
+  const ausPath='M40,95 L95,40 L175,70 L210,35 L255,78 L300,30 L340,90 L400,150 '
+    +'L470,235 L505,285 L475,320 L390,320 L300,295 L210,320 L120,305 L55,235 L35,160 Z';
+  mg.append('path').attr('d',ausPath)
+    .attr('fill','rgba(132,39,226,.07)').attr('stroke',C.line2).attr('stroke-width',1.6)
+    .attr('stroke-linejoin','round');
+  // faint context dots
+  [[60,210],[330,70],[250,300]].forEach(p=>{
+    mg.append('circle').attr('cx',p[0]).attr('cy',p[1]).attr('r',2.4).attr('fill',C.faint);
+  });
+  // sites
+  const SYD={x:500,y:268,name:'Sydney',region:'Australia East',role:'PRIMARY',col:C.v2,glow:C.v3,
+    d:'Production and day-to-day non-production environments. Australia East supports Availability Zones — the High Availability add-on operates here.'};
+  const MEL={x:452,y:312,name:'Melbourne',region:'Australia Southeast',role:'DISASTER RECOVERY',col:C.teal,glow:C.teal,
+    d:'The geographically separated secondary region — holds geo-redundant backup and recovery storage. Protects against a region-level event.'};
+  // replication arc
+  const arc=mg.append('path')
+    .attr('d','M'+SYD.x+','+SYD.y+' Q'+(SYD.x+62)+','+((SYD.y+MEL.y)/2+18)+' '+MEL.x+','+MEL.y)
+    .attr('fill','none').attr('stroke',C.teal).attr('stroke-width',2)
+    .attr('stroke-dasharray','6,7').attr('opacity',.85);
+  (function flow(){arc.attr('stroke-dashoffset',0).transition().duration(1400).ease(d3.easeLinear)
+    .attr('stroke-dashoffset',-26).on('end',flow);})();
+  T(mg,(SYD.x+MEL.x)/2+58,(SYD.y+MEL.y)/2+8,'geo-redundant',{fs:8.5,mono:1,fill:C.teal});
+  T(mg,(SYD.x+MEL.x)/2+58,(SYD.y+MEL.y)/2+20,'replication',{fs:8.5,mono:1,fill:C.teal});
+  // markers
+  let selSite='overview';
+  [SYD,MEL].forEach(S=>{
+    const g=mg.append('g').attr('class','n-node');
+    const pulse=g.append('circle').attr('cx',S.x).attr('cy',S.y).attr('r',9).attr('fill','none')
+      .attr('stroke',S.glow).attr('stroke-width',1.5);
+    (function rep(){pulse.attr('r',9).attr('opacity',.7)
+      .transition().duration(2000).ease(d3.easeCubicOut).attr('r',26).attr('opacity',0)
+      .on('end',rep);})();
+    S._core=g.append('circle').attr('cx',S.x).attr('cy',S.y).attr('r',9)
+      .attr('fill',S.col).attr('stroke','#fff').attr('stroke-width',1.5);
+    R(g,S.x+16,S.y-22,150,44,{r:8,fill:C.s1,stroke:C.line});
+    T(g,S.x+28,S.y-6,S.name,{fs:13,fw:600});
+    T(g,S.x+28,S.y+9,S.role,{fs:7.5,mono:1,fill:S.glow,ls:1.2});
+    T(g,S.x+28,S.y+20,S.region,{fs:7.5,mono:1,fill:C.faint});
+    g.on('click',()=>{selSite=S.name;render();})
+     .on('mousemove',e=>{const m=px(e);
+       tip.show('<div class="tk">'+S.role+'</div><div class="tt">'+S.name+' · '+S.region+'</div><div class="td">'+S.d+'</div>',m[0],m[1]);})
+     .on('mouseleave',()=>tip.hide());
+  });
+  T(mg,40,360,'AUSTRALIA — DATA RESIDENT ONSHORE',{fs:9,mono:1,fill:C.faint,ls:1.6});
+  // panel
+  const PX=760,PY=40,PW=348,PH=388;
+  R(svg,PX,PY,PW,PH,{r:14,fill:C.s1,stroke:C.line});
+  const pBar=R(svg,PX,PY,5,PH,{r:2.5,fill:C.v2});
+  const pT=T(svg,PX+26,PY+42,'',{fs:18,fw:600});
+  const pK=T(svg,PX+26,PY+22,'',{fs:9,mono:1,fill:C.v3,ls:1.6});
+  const pBody=svg.append('g');
+  function panel(k,kc,title,bar,rows){
+    pBar.transition().duration(200).attr('fill',bar);
+    pK.attr('fill',kc).text(k);pT.text(title);
+    pBody.selectAll('*').remove();
+    rows.forEach((r,i)=>{
+      const y=PY+72+i*54;
+      const row=pBody.append('g').attr('opacity',0);
+      R(row,PX+24,y,PW-48,44,{r:9,fill:C.s2,stroke:C.line});
+      row.append('circle').attr('cx',PX+44).attr('cy',y+22).attr('r',4).attr('fill',bar);
+      T(row,PX+60,y+19,r[0],{fs:11.5,fw:600});
+      T(row,PX+60,y+34,r[1],{fs:9.5,fill:C.dim});
+      row.transition().delay(i*70).duration(300).attr('opacity',1);
+    });
+  }
+  function render(){
+    SYD._core.attr('stroke-width',selSite==='Sydney'?3:1.5);
+    MEL._core.attr('stroke-width',selSite==='Melbourne'?3:1.5);
+    if(selSite==='Sydney')panel('PRIMARY REGION',C.v3,'Sydney',C.v2,[
+      ['Azure Australia East','New South Wales — the primary region'],
+      ['Hosts production','Live environment under the availability SLA'],
+      ['Availability Zones','Supports the High Availability add-on'],
+      ['Data at rest','Stored within Australian borders']]);
+    else if(selSite==='Melbourne')panel('DISASTER RECOVERY',C.teal,'Melbourne',C.teal,[
+      ['Azure Australia Southeast','Victoria — the secondary region'],
+      ['Geo-redundant storage','Backups replicated from Sydney'],
+      ['Geographic separation','Protects against a region-level event'],
+      ['Data at rest','Backups also remain within Australia']]);
+    else panel('HOSTING TOPOLOGY',C.v3,'Sydney + Melbourne',C.v2,[
+      ['Primary · Sydney','Azure Australia East — production'],
+      ['Disaster recovery · Melbourne','Azure Australia Southeast'],
+      ['Replication','Geo-redundant, Sydney to Melbourne'],
+      ['Click a marker','Inspect each region in detail']]);
+  }
+  render();
+});
+
+/* ============================================================
+   33 · SYDNEY PRODUCTION ARCHITECTURE
+   ============================================================ */
+dgReg('s33','dg-syd',1140,468,function(svg,tip,px){
+  const tiers=[
+    {id:'dmz',n:'DMZ tier',k:'SECURE GATEWAY',c:C.blue,
+     d:'The controlled entry point. Public internet with IP whitelisting, site-to-site VPN, or private ExpressRoute terminate here.'},
+    {id:'app',n:'Application tier',k:'CONTAINERISED MIDDLE TIER',c:C.v2,
+     d:'The Kubernetes-orchestrated containerised services running the IFS Cloud business logic.'},
+    {id:'db',n:'Database tier',k:'RELATIONAL STORAGE',c:C.teal,
+     d:'Oracle or Azure SQL relational storage, encrypted at rest, reachable only through business logic.'}
+  ];
+  const envs=[
+    {id:'prd',n:'PRODUCTION',sub:'Live · SLA-covered'},
+    {id:'tst',n:'TEST',sub:'Change validation'},
+    {id:'cfg',n:'CONFIG',sub:'Tailoring'}
+  ];
+  let sel='app';
+  // subscription box
+  const SX=10,SY=8,SW=772,SH=452;
+  R(svg,SX,SY,SW,SH,{r:16,fill:'rgba(132,39,226,.045)',stroke:C.line2,sw:1.5});
+  T(svg,SX+24,SY+30,'SINGLE-TENANT AZURE SUBSCRIPTION',{fs:10,mono:1,fill:C.v3,ls:1.8});
+  T(svg,SX+SW-22,SY+30,'Australia East · Sydney',{fs:9.5,mono:1,fill:C.faint,anchor:'end'});
+  R(svg,SX+24,SY+44,260,24,{r:6,fill:'rgba(39,182,99,.1)',stroke:C.lo,sw:1});
+  svg.append('circle').attr('cx',SX+40).attr('cy',SY+56).attr('r',3.5).attr('fill',C.lo);
+  T(svg,SX+52,SY+60,'Fully segregated — one customer',{fs:9.5,fill:C.lo,mono:1});
+  // connectivity node
+  const cn=svg.append('g');
+  R(cn,SX+22,SY+150,96,150,{r:11,fill:C.s1,stroke:C.line});
+  T(cn,SX+70,SY+172,'ACCESS',{fs:8,mono:1,fill:C.faint,anchor:'middle',ls:1.4});
+  ['Internet','VPN','ExpressRoute'].forEach((c,i)=>{
+    R(cn,SX+32,SY+184+i*36,76,28,{r:6,fill:C.s2,stroke:C.line});
+    T(cn,SX+70,SY+202+i*36,c,{fs:8.5,anchor:'middle',fill:C.dim,mono:1});
+  });
+  // grid
+  const gx=SX+140,gy=SY+92,cw=196,rh=94,cgap=14,rgap=10;
+  // env headers
+  envs.forEach((e,ci)=>{
+    const x=gx+ci*(cw+cgap);
+    R(svg,x,gy,cw,30,{r:8,fill:C.s2,stroke:C.line});
+    T(svg,x+cw/2,gy+15,e.n,{fs:10.5,mono:1,fw:600,anchor:'middle',ls:1});
+    T(svg,x+cw/2,gy+26,e.sub,{fs:8,fill:C.faint,anchor:'middle'});
+  });
+  const cells=[];
+  tiers.forEach((t,ri)=>{
+    const y=gy+40+ri*(rh+rgap);
+    envs.forEach((e,ci)=>{
+      const x=gx+ci*(cw+cgap);
+      const g=svg.append('g').attr('class','n-node').attr('opacity',0);
+      const r=R(g,x,y,cw,rh,{r:10,fill:C.s1,stroke:C.line});
+      R(g,x,y,cw,4,{r:2,fill:t.c});
+      T(g,x+16,y+28,t.n,{fs:11.5,fw:600});
+      T(g,x+16,y+44,t.k,{fs:7,mono:1,fill:C.faint,ls:1});
+      // mini glyphs
+      if(t.id==='app'){
+        for(let p=0;p<4;p++)R(g,x+16+(p%2)*40,y+52+Math.floor(p/2)*20,32,16,{r:4,fill:'rgba(132,39,226,.16)',stroke:C.v2,sw:1});
+      }else if(t.id==='db'){
+        for(let p=0;p<3;p++)g.append('ellipse').attr('cx',x+30).attr('cy',y+54+p*12).attr('rx',16).attr('ry',4.5).attr('fill','none').attr('stroke',C.teal).attr('stroke-width',1);
+      }else{
+        R(g,x+16,y+54,cw-32,24,{r:5,fill:'rgba(59,130,246,.12)',stroke:C.blue,sw:1});
+        T(g,x+16+(cw-32)/2,y+69,'gateway',{fs:8.5,mono:1,fill:C.blue,anchor:'middle'});
+      }
+      cells.push({g:g,r:r,tier:t.id,env:e.id});
+      g.on('click',()=>{sel=t.id;render();})
+       .on('mousemove',ev=>{const m=px(ev);
+         tip.show('<div class="tk">'+e.n+' · '+t.k+'</div><div class="tt">'+t.n+'</div><div class="td">'+t.d+'</div>',m[0],m[1]);})
+       .on('mouseleave',()=>tip.hide());
+      g.transition().delay((ri*3+ci)*45).duration(320).attr('opacity',1).on('end',function(){d3.select(this).attr('opacity',null);});
+    });
+  });
+  // connectivity arrow to DMZ row
+  svg.append('path').attr('d','M'+(SX+118)+','+(SY+150+75)+' L'+(gx-6)+','+(gy+40+rh/2)+'')
+    .attr('stroke',C.line2).attr('stroke-width',1.5).attr('fill','none').attr('marker-end','');
+  // panel
+  const PX=800,PY=8,PW=330,PH=452;
+  R(svg,PX,PY,PW,PH,{r:14,fill:C.s1,stroke:C.line});
+  const pBar=R(svg,PX,PY,5,PH,{r:2.5,fill:C.v2});
+  const pK=T(svg,PX+26,PY+38,'',{fs:9,mono:1,ls:1.6});
+  const pN=T(svg,PX+26,PY+66,'',{fs:20,fw:600});
+  const pBody=svg.append('g');
+  function render(){
+    cells.forEach(c=>{
+      const on=c.tier===sel;
+      c.r.transition().duration(220).attr('stroke',on?tiers.find(t=>t.id===sel).c:C.line)
+        .attr('stroke-width',on?2:1).attr('fill',on?C.s2:C.s1);
+      c.g.transition().duration(220).attr('opacity',on?1:.5);
+    });
+    const t=tiers.find(x=>x.id===sel);
+    pBar.transition().duration(200).attr('fill',t.c);
+    pK.attr('fill',t.c).text(t.k);pN.text(t.n);
+    pBody.selectAll('*').remove();
+    const ws=t.d.split(' ');let line='',ln=0;
+    ws.forEach(w=>{if((line+' '+w).length>36){T(pBody,PX+26,PY+100+ln*20,line,{fs:12,fill:C.dim});line=w;ln++;}else line=line?line+' '+w:w;});
+    T(pBody,PX+26,PY+100+ln*20,line,{fs:12,fill:C.dim});
+    const notes=[
+      ['Three environments','Production runs physically separate from non-production.'],
+      ['Consistent tiering','Every environment uses the same three-tier build.'],
+      ['Single-tenant','The subscription is dedicated to one customer.']
+    ];
+    notes.forEach((n,i)=>{
+      const y=PY+148+ln*20+i*70;
+      const row=pBody.append('g');
+      R(row,PX+24,y,PW-48,62,{r:9,fill:C.s2,stroke:C.line});
+      row.append('circle').attr('cx',PX+44).attr('cy',y+21).attr('r',4).attr('fill',t.c);
+      T(row,PX+58,y+26,n[0],{fs:11.5,fw:600});
+      const ws2=n[1].split(' ');let l2='',ln2=0;
+      ws2.forEach(w=>{if((l2+' '+w).length>36){T(row,PX+44,y+44+ln2*15,l2,{fs:10,fill:C.dim});l2=w;ln2++;}else l2=l2?l2+' '+w:w;});
+      T(row,PX+44,y+44+ln2*15,l2,{fs:10,fill:C.dim});
+    });
+  }
+  render();
+});
+
+/* ---- DIAGRAMS_INSERT ---- */
+
+show(0);setCnt();renderNotes();
+</script>
+
+
+<div id="bookmark-search-overlay" class="bookmark-search-overlay" style="display: none;"><img src="./IFS-Cloud-Technical-Architecture_files/Logo.svg" class="search-thumbnail" alt="Search Thumbnail" style="display: block;"><div class="search-container" style="margin-top: 32px;"><input type="text" placeholder="Search bookmarks by title, tags, or folder..." class="search-input" autocomplete="off"></div><div class="loading-indicator" style="display: none;"><div class="spinner"></div></div><div class="results-info" style="display: none;"></div><div class="results-container"></div><div class="no-results" style="display: none;">No bookmarks found</div></div><div id="bookmark-search-overlay" class="bookmark-search-overlay" style="display: none;"><img src="./IFS-Cloud-Technical-Architecture_files/Logo(1).svg" class="search-thumbnail" alt="Search Thumbnail" style="display: block;"><div class="search-container" style="margin-top: 32px;"><input type="text" placeholder="Search bookmarks by title, tags, or folder..." class="search-input" autocomplete="off"></div><div class="loading-indicator" style="display: none;"><div class="spinner"></div></div><div class="results-info" style="display: none;"></div><div class="results-container"></div><div class="no-results" style="display: none;">No bookmarks found</div></div></body></html>
